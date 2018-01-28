@@ -55,6 +55,11 @@ def do_request(client, srv, scope="", response_body_type="",
 
     logger.debug('do_request info: {}'.format(_info))
 
+    try:
+        kwargs['state'] = request_args['state']
+    except KeyError:
+        pass
+
     return srv.service_request(
         _info['uri'], method, _body, response_body_type,
         http_args=_info['http_args'], client_info=client.client_info,

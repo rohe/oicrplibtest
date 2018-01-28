@@ -185,7 +185,7 @@ CLIENTS = {
             ('ProviderInfoDiscovery', {}),
             ('Registration', {}),
             ('Authorization', {}),
-            ('AccessToken', {})
+            ('AccessToken', {'verify': {'allow_missing_kid': True}})
         ]
     },
     'rp-id_token-iat': {
