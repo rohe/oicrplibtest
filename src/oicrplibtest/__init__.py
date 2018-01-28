@@ -35,8 +35,8 @@ CLIENT_CONFIG = {}
 
 
 def do_request(client, srv, scope="", response_body_type="",
-        method="", request_args=None, extra_args=None,
-        http_args=None, authn_method="", **kwargs):
+               method="", request_args=None, extra_args=None,
+               http_args=None, authn_method="", **kwargs):
     if not method:
         method = srv.http_method
 
@@ -63,9 +63,9 @@ def do_request(client, srv, scope="", response_body_type="",
 
 class RPHandler(object):
     def __init__(self, base_url='', hash_seed="", keyjar=None, verify_ssl=False,
-            services=None, service_factory=None, client_configs=None,
-            client_authn_method=CLIENT_AUTHN_METHOD, client_cls=None,
-            **kwargs):
+                 services=None, service_factory=None, client_configs=None,
+                 client_authn_method=CLIENT_AUTHN_METHOD, client_cls=None,
+                 **kwargs):
         self.base_url = base_url
         self.hash_seed = as_bytes(hash_seed)
         self.verify_ssl = verify_ssl
@@ -121,7 +121,11 @@ class RPHandler(object):
                 except Exception as err:
                     message = traceback.format_exception(*sys.exc_info())
                     logger.error(message)
-                    raise
+                    _header = '<h2>{} ({})</h2>'.format(err,
+                                                        err.__class__.__name__)
+                    _body = '<br>'.join(message)
+                    _error_html = '{}<p>{}</p>'.format(_header, _body)
+                    return as_bytes(_error_html)
 
                 client.client_info.service_index += 1
             else:
