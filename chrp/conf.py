@@ -47,12 +47,16 @@ CLIENTS = {
     "rp-discovery-webfinger-url": {
         'resource': '{}/{}/rp-discovery-webfinger-url'.format(TESTTOOL_URL,
                                                               TESTER_ID),
-        "services": ['WebFinger']
+        "services": [
+            ('WebFinger', {})
+        ]
     },
     "rp-discovery-openid-configuration": {
         'issuer': '{}/{}/rp-discovery-openid-configuration'.format(TESTTOOL_URL,
                                                                    TESTER_ID),
-        "services": ['ProviderInfoDiscovery']
+        "services": [
+            ('ProviderInfoDiscovery', {})
+        ]
     },
     'rp-response_type-code': {
         'issuer': '{}/{}/rp-response_type-code'.format(TESTTOOL_URL,
@@ -67,7 +71,10 @@ CLIENTS = {
             "token_endpoint_auth_method": ["client_secret_basic",
                                            'client_secret_post'],
         },
-        "services": ['ProviderInfoDiscovery', 'Registration', 'Authorization']
+        "services": [
+            ('ProviderInfoDiscovery', {}),
+            ('Registration', {}),
+            ('Authorization', {})]
     },
     'rp-token_endpoint-client_secret_basic': {
         'issuer': '{}/{}/rp-token_endpoint-client_secret_basic'.format(
@@ -84,8 +91,12 @@ CLIENTS = {
             "scope": ["openid", "profile", "email", "address", "phone"],
             "token_endpoint_auth_method": ["client_secret_basic"],
         },
-        "services": ['ProviderInfoDiscovery', 'Registration', 'Authorization',
-                     'AccessToken']
+        "services": [
+            ('ProviderInfoDiscovery', {}),
+            ('Registration', {}),
+            ('Authorization', {}),
+            ('AccessToken', {})
+        ]
     },
     'rp-userinfo-bearer-body':{
         'issuer': '{}/{}/rp-userinfo-bearer-body'.format(
@@ -102,7 +113,12 @@ CLIENTS = {
             "scope": ["openid", "profile", "email", "address", "phone"],
             "token_endpoint_auth_method": ["client_secret_basic"],
         },
-        "services": ['ProviderInfoDiscovery', 'Registration', 'Authorization',
-                     'AccessToken', 'UserInfo']
+        "services": [
+            ('ProviderInfoDiscovery', {}),
+            ('Registration', {}),
+            ('Authorization', {}),
+            ('AccessToken', {}),
+            ('UserInfo', {})
+        ]
     }
 }
