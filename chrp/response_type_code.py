@@ -211,12 +211,9 @@ CLIENTS = {
         ]
     },
     'rp-id_token-aud': {
-        'issuer': '{}/{}/rp-id_token-aud'.format(
-            TESTTOOL_URL,
-            TESTER_ID),
+        'issuer': '{}/{}/rp-id_token-aud'.format(TESTTOOL_URL, TESTER_ID),
         "redirect_uris": [
-            "{}/authz_cb/rp-id_token-aud".format(
-                BASEURL)],
+            "{}/authz_cb/rp-id_token-aud".format(BASEURL)],
         "client_prefs": {
             "application_type": "web",
             "application_name": "rphandler",
@@ -411,8 +408,8 @@ CLIENTS = {
         ]
     },
     'rp-discovery-webfinger-acct': {
-        'resource': '{}.rp-discovery-webfinger-acct@{}'.format(TESTER_ID,
-                                                               TESTTOOL_URL),
+        'resource': 'acct:{}.rp-discovery-webfinger-acct@localhost:8080'.format(
+            TESTER_ID),
         "services": [
             ('WebFinger', {})
         ]
@@ -428,7 +425,7 @@ CLIENTS = {
         'issuer': '{}/{}/rp-discovery-openid-configuration'.format(TESTTOOL_URL,
                                                                    TESTER_ID),
         "services": [
-            ('ProviderInfoDiscovery', {})
+            ('ProviderInfoDiscovery', {'pre_load_keys': True})
         ]
     },
     'rp-discovery-issuer-not-matching-config': {
