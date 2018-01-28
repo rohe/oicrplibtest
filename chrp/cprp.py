@@ -7,7 +7,6 @@ from html import entities as htmlentitydefs
 from urllib.parse import parse_qs
 
 import cherrypy
-import requests
 from jwkest import as_bytes
 
 logger = logging.getLogger(__name__)

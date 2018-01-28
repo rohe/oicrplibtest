@@ -96,10 +96,10 @@ class RPHandler(object):
     def run(self, client, state=''):
         _srvs = client.client_info.config['services']
         while client.client_info.service_index < len(_srvs):
-            srv = _srvs[client.client_info.service_index]
+            srv, conf = _srvs[client.client_info.service_index]
             _srv = self.service_factory(
                 srv, httplib=client.http, keyjar=client.client_info.keyjar,
-                client_authn_method=self.client_authn_method)
+                client_authn_method=self.client_authn_method, conf=conf)
 
             if _srv.endpoint_name:
                 _srv.endpoint = client.client_info.provider_info[
