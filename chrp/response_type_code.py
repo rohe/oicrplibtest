@@ -460,10 +460,80 @@ CLIENTS = {
             ('Registration', {}),
         ]
     },
-    'rp-request_uri-enc': {},
-    'rp-request_uri-sig': {},
-    'rp-request_uri-sig+enc': {},
-    'rp-request_uri-unsigned': {},
+    'rp-request_uri-enc': {
+        'issuer': '{}/{}/rp-request_uri-enc'.format(TESTTOOL_URL,
+                                                       TESTER_ID),
+        "redirect_uris": ["{}/authz_cb/rp-request_uri-enc".format(BASEURL)],
+        "client_prefs": {
+            "application_type": "web",
+            "application_name": "rphandler",
+            "contacts": ["ops@example.com"],
+            "response_types": ["code"],
+            "scope": ["openid", "profile", "email", "address", "phone"],
+            "token_endpoint_auth_method": ["client_secret_basic",
+                                           'client_secret_post'],
+        },
+        "services": [
+            ('ProviderInfoDiscovery', {}),
+            ('Registration', {}),
+            ('Authorization', {})]
+    },
+    'rp-request_uri-sig': {
+        'issuer': '{}/{}/rp-request_uri-sig'.format(TESTTOOL_URL,
+                                                       TESTER_ID),
+        "redirect_uris": ["{}/authz_cb/rp-request_uri-sig".format(BASEURL)],
+        "client_prefs": {
+            "application_type": "web",
+            "application_name": "rphandler",
+            "contacts": ["ops@example.com"],
+            "response_types": ["code"],
+            "scope": ["openid", "profile", "email", "address", "phone"],
+            "token_endpoint_auth_method": ["client_secret_basic",
+                                           'client_secret_post'],
+        },
+        "services": [
+            ('ProviderInfoDiscovery', {}),
+            ('Registration', {}),
+            ('Authorization', {})]
+    },
+    'rp-request_uri-sig+enc': {
+        'issuer': '{}/{}/rp-request_uri-sig+enc'.format(TESTTOOL_URL,
+                                                       TESTER_ID),
+        "redirect_uris": ["{}/authz_cb/rp-request_uri-sig+enc".format(BASEURL)],
+        "client_prefs": {
+            "application_type": "web",
+            "application_name": "rphandler",
+            "contacts": ["ops@example.com"],
+            "response_types": ["code"],
+            "scope": ["openid", "profile", "email", "address", "phone"],
+            "token_endpoint_auth_method": ["client_secret_basic",
+                                           'client_secret_post'],
+        },
+        "services": [
+            ('ProviderInfoDiscovery', {}),
+            ('Registration', {}),
+            ('Authorization', {
+                'pre_construct': {'request_method': 'request_uri'}})]
+    },
+    'rp-request_uri-unsigned': {
+        'issuer': '{}/{}/rp-request_uri-unsigned'.format(TESTTOOL_URL,
+                                                       TESTER_ID),
+        "redirect_uris": [
+            "{}/authz_cb/rp-request_uri-unsigned".format(BASEURL)],
+        "client_prefs": {
+            "application_type": "web",
+            "application_name": "rphandler",
+            "contacts": ["ops@example.com"],
+            "response_types": ["code"],
+            "scope": ["openid", "profile", "email", "address", "phone"],
+            "token_endpoint_auth_method": ["client_secret_basic",
+                                           'client_secret_post'],
+        },
+        "services": [
+            ('ProviderInfoDiscovery', {}),
+            ('Registration', {}),
+            ('Authorization', {})]
+    },
     'rp-token_endpoint-private_key_jwt': {},
     'rp-token_endpoint-client_secret_post': {},
     'rp-token_endpoint-client_secret_jwt': {},
