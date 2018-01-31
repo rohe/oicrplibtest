@@ -67,14 +67,14 @@ def do_request(client, srv, scope="", response_body_type="",
 
 
 class RPHandler(object):
-    def __init__(self, base_url='', hash_seed="", keyjar=None, verify_ssl=False,
+    def __init__(self, base_url='', hash_seed="", jwks=None, verify_ssl=False,
                  services=None, service_factory=None, client_configs=None,
                  client_authn_method=CLIENT_AUTHN_METHOD, client_cls=None,
-                 **kwargs):
+                 jwks_path='', jwks_uri='', **kwargs):
         self.base_url = base_url
         self.hash_seed = as_bytes(hash_seed)
         self.verify_ssl = verify_ssl
-        self.keyjar = keyjar
+        self.jwks = jwks
 
         self.extra = kwargs
 
@@ -83,6 +83,8 @@ class RPHandler(object):
         self.service_factory = service_factory or factory
         self.client_authn_method = client_authn_method
         self.client_configs = client_configs
+        self.jwks_path = jwks_path
+        self.jwks_uri = jwks_uri
 
         # keep track on which RP instance that serves with OP
         self.test_id2rp = {}
@@ -170,6 +172,7 @@ class RPHandler(object):
 
             client.client_info.base_url = self.base_url
             client.client_info.service_index = 0
+            client.client_info.keyjar.import_jwks_as_json(self.jwks, '')
             self.test_id2rp[test_id] = client
 
         return self.run(client)

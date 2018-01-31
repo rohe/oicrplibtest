@@ -462,7 +462,7 @@ CLIENTS = {
     },
     'rp-request_uri-enc': {
         'issuer': '{}/{}/rp-request_uri-enc'.format(TESTTOOL_URL,
-                                                       TESTER_ID),
+                                                    TESTER_ID),
         "redirect_uris": ["{}/authz_cb/rp-request_uri-enc".format(BASEURL)],
         "client_prefs": {
             "application_type": "web",
@@ -473,14 +473,26 @@ CLIENTS = {
             "token_endpoint_auth_method": ["client_secret_basic",
                                            'client_secret_post'],
         },
+        'behaviour': {'jwks_uri': '{}/{}'. format(BASEURL, PUBLIC_JWKS_PATH)},
+        'requests_dir': 'static',
         "services": [
             ('ProviderInfoDiscovery', {}),
             ('Registration', {}),
-            ('Authorization', {})]
+            ('Authorization', {
+                'pre_construct': {'request_method': 'request_uri'},
+                'post_construct': {
+                    'request_method': 'request_uri',
+                    'request_object_signing_alg': 'none',
+                    'request_object_encryption_alg': '',
+                    'request_object_encryption_enc': '',
+                    'target': '{}/{}/rp-request_uri-enc'.format(TESTTOOL_URL,
+                                                                TESTER_ID)
+                }
+            })]
     },
     'rp-request_uri-sig': {
         'issuer': '{}/{}/rp-request_uri-sig'.format(TESTTOOL_URL,
-                                                       TESTER_ID),
+                                                    TESTER_ID),
         "redirect_uris": ["{}/authz_cb/rp-request_uri-sig".format(BASEURL)],
         "client_prefs": {
             "application_type": "web",
@@ -491,14 +503,21 @@ CLIENTS = {
             "token_endpoint_auth_method": ["client_secret_basic",
                                            'client_secret_post'],
         },
+        'behaviour': {'jwks_uri': '{}/{}'. format(BASEURL, PUBLIC_JWKS_PATH)},
+        'requests_dir': 'static',
         "services": [
             ('ProviderInfoDiscovery', {}),
             ('Registration', {}),
-            ('Authorization', {})]
+            ('Authorization', {
+                'pre_construct': {'request_method': 'request_uri'},
+                'post_construct': {
+                    'request_method': 'request_uri',
+                    'request_object_signing_alg': 'RS256'}
+            })]
     },
     'rp-request_uri-sig+enc': {
         'issuer': '{}/{}/rp-request_uri-sig+enc'.format(TESTTOOL_URL,
-                                                       TESTER_ID),
+                                                        TESTER_ID),
         "redirect_uris": ["{}/authz_cb/rp-request_uri-sig+enc".format(BASEURL)],
         "client_prefs": {
             "application_type": "web",
@@ -509,15 +528,26 @@ CLIENTS = {
             "token_endpoint_auth_method": ["client_secret_basic",
                                            'client_secret_post'],
         },
+        'behaviour': {'jwks_uri': '{}/{}'. format(BASEURL, PUBLIC_JWKS_PATH)},
+        'requests_dir': 'static',
         "services": [
             ('ProviderInfoDiscovery', {}),
             ('Registration', {}),
             ('Authorization', {
-                'pre_construct': {'request_method': 'request_uri'}})]
+                'pre_construct': {'request_method': 'request_uri'},
+                'post_construct': {
+                    'request_method': 'request_uri',
+                    'request_object_signing_alg': 'RS256',
+                    'request_object_encryption_alg': '',
+                    'request_object_encryption_enc': '',
+                    'target': '{}/{}/rp-request_uri-enc'.format(TESTTOOL_URL,
+                                                                TESTER_ID)
+                }
+            })]
     },
     'rp-request_uri-unsigned': {
         'issuer': '{}/{}/rp-request_uri-unsigned'.format(TESTTOOL_URL,
-                                                       TESTER_ID),
+                                                         TESTER_ID),
         "redirect_uris": [
             "{}/authz_cb/rp-request_uri-unsigned".format(BASEURL)],
         "client_prefs": {
@@ -529,27 +559,298 @@ CLIENTS = {
             "token_endpoint_auth_method": ["client_secret_basic",
                                            'client_secret_post'],
         },
+        'requests_dir': 'static',
         "services": [
             ('ProviderInfoDiscovery', {}),
             ('Registration', {}),
-            ('Authorization', {})]
+            ('Authorization', {
+                'pre_construct': {'request_method': 'request_uri'},
+                'post_construct': {
+                    'request_method': 'request_uri',
+                    'request_object_signing_alg': 'none',
+                }
+            })]
     },
-    'rp-token_endpoint-private_key_jwt': {},
-    'rp-token_endpoint-client_secret_post': {},
-    'rp-token_endpoint-client_secret_jwt': {},
-    'rp-id_token-sig+enc': {},
-    'rp-id_token-sig-hs256': {},
-    'rp-id_token-sig-es256': {},
-    'rp-id_token-sig+enc-a128kw': {},
-    'rp-id_token-bad-sig-hs256': {},
-    'rp-id_token-bad-sig-es256': {},
+    'rp-token_endpoint-private_key_jwt': {
+        'issuer': '{}/{}/rp-token_endpoint-private_key_jwt'.format(
+            TESTTOOL_URL,
+            TESTER_ID),
+        "redirect_uris": [
+            "{}/authz_cb/rp-token_endpoint-private_key_jwt".format(
+                BASEURL)],
+        "client_prefs": {
+            "application_type": "web",
+            "application_name": "rphandler",
+            "contacts": ["ops@example.com"],
+            "response_types": ["code"],
+            "scope": ["openid", "profile", "email", "address", "phone"],
+            "token_endpoint_auth_method": ["private_key_jwt"],
+        },
+        'behaviour': {'jwks_uri': '{}/{}'. format(BASEURL, PUBLIC_JWKS_PATH)},
+        "services": [
+            ('ProviderInfoDiscovery', {}),
+            ('Registration', {}),
+            ('Authorization', {}),
+            ('AccessToken', {})
+        ]
+    },
+    'rp-token_endpoint-client_secret_post': {
+        'issuer': '{}/{}/rp-token_endpoint-client_secret_post'.format(
+            TESTTOOL_URL,
+            TESTER_ID),
+        "redirect_uris": [
+            "{}/authz_cb/rp-token_endpoint-client_secret_post".format(
+                BASEURL)],
+        "client_prefs": {
+            "application_type": "web",
+            "application_name": "rphandler",
+            "contacts": ["ops@example.com"],
+            "response_types": ["code"],
+            "scope": ["openid", "profile", "email", "address", "phone"],
+            "token_endpoint_auth_method": ["client_secret_post"],
+        },
+        'behaviour': {'jwks_uri': '{}/{}'.format(BASEURL, PUBLIC_JWKS_PATH)},
+        "services": [
+            ('ProviderInfoDiscovery', {}),
+            ('Registration', {}),
+            ('Authorization', {}),
+            ('AccessToken', {})
+        ]
+    },
+    'rp-token_endpoint-client_secret_jwt': {
+        'issuer': '{}/{}/rp-token_endpoint-client_secret_jwt'.format(
+            TESTTOOL_URL,
+            TESTER_ID),
+        "redirect_uris": [
+            "{}/authz_cb/rp-token_endpoint-client_secret_jwt".format(
+                BASEURL)],
+        "client_prefs": {
+            "application_type": "web",
+            "application_name": "rphandler",
+            "contacts": ["ops@example.com"],
+            "response_types": ["code"],
+            "scope": ["openid", "profile", "email", "address", "phone"],
+            "token_endpoint_auth_method": ["client_secret_jwt"],
+        },
+        'behaviour': {'jwks_uri': '{}/{}'.format(BASEURL, PUBLIC_JWKS_PATH)},
+        "services": [
+            ('ProviderInfoDiscovery', {}),
+            ('Registration', {}),
+            ('Authorization', {}),
+            ('AccessToken', {})
+        ]
+    },
+    'rp-id_token-sig+enc': {
+        'issuer': '{}/{}/rp-id_token-sig+enc'.format(
+            TESTTOOL_URL,
+            TESTER_ID),
+        "redirect_uris": [
+            "{}/authz_cb/rp-id_token-sig+enc".format(
+                BASEURL)],
+        "client_prefs": {
+            "application_type": "web",
+            "application_name": "rphandler",
+            "contacts": ["ops@example.com"],
+            "response_types": ["code"],
+            "scope": ["openid", "profile", "email", "address", "phone"],
+            "token_endpoint_auth_method": ["client_secret_basic"],
+        },
+        'behaviour': {'jwks_uri': '{}/{}'.format(BASEURL, PUBLIC_JWKS_PATH)},
+        "services": [
+            ('ProviderInfoDiscovery', {}),
+            ('Registration', {}),
+            ('Authorization', {}),
+            ('AccessToken', {})
+        ]
+    },
+    'rp-id_token-sig-hs256': {
+        'issuer': '{}/{}/rp-id_token-sig-hs256'.format(
+            TESTTOOL_URL,
+            TESTER_ID),
+        "redirect_uris": [
+            "{}/authz_cb/rp-id_token-sig-hs256".format(
+                BASEURL)],
+        "client_prefs": {
+            "application_type": "web",
+            "application_name": "rphandler",
+            "contacts": ["ops@example.com"],
+            "response_types": ["code"],
+            "scope": ["openid", "profile", "email", "address", "phone"],
+            "token_endpoint_auth_method": ["client_secret_basic"],
+        },
+        'behaviour': {'jwks_uri': '{}/{}'.format(BASEURL, PUBLIC_JWKS_PATH)},
+        "services": [
+            ('ProviderInfoDiscovery', {}),
+            ('Registration', {}),
+            ('Authorization', {}),
+            ('AccessToken', {})
+        ]
+    },
+    'rp-id_token-sig-es256': {
+        'issuer': '{}/{}/rp-id_token-sig-es256'.format(
+            TESTTOOL_URL,
+            TESTER_ID),
+        "redirect_uris": [
+            "{}/authz_cb/rp-id_token-sig-es256".format(
+                BASEURL)],
+        "client_prefs": {
+            "application_type": "web",
+            "application_name": "rphandler",
+            "contacts": ["ops@example.com"],
+            "response_types": ["code"],
+            "scope": ["openid", "profile", "email", "address", "phone"],
+            "token_endpoint_auth_method": ["client_secret_basic"],
+        },
+        'behaviour': {'jwks_uri': '{}/{}'.format(BASEURL, PUBLIC_JWKS_PATH)},
+        "services": [
+            ('ProviderInfoDiscovery', {}),
+            ('Registration', {}),
+            ('Authorization', {}),
+            ('AccessToken', {})
+        ]
+    },
+    'rp-id_token-sig+enc-a128kw': {
+        'issuer': '{}/{}/rp-id_token-sig+enc-a128kw'.format(
+            TESTTOOL_URL,
+            TESTER_ID),
+        "redirect_uris": [
+            "{}/authz_cb/rp-id_token-sig+enc-a128kw".format(
+                BASEURL)],
+        "client_prefs": {
+            "application_type": "web",
+            "application_name": "rphandler",
+            "contacts": ["ops@example.com"],
+            "response_types": ["code"],
+            "scope": ["openid", "profile", "email", "address", "phone"],
+            "token_endpoint_auth_method": ["client_secret_basic"],
+        },
+        'behaviour': {'jwks_uri': '{}/{}'.format(BASEURL, PUBLIC_JWKS_PATH)},
+        "services": [
+            ('ProviderInfoDiscovery', {}),
+            ('Registration', {}),
+            ('Authorization', {}),
+            ('AccessToken', {})
+        ]
+    },
+    'rp-id_token-bad-sig-hs256': {
+        'issuer': '{}/{}/rp-id_token-bad-sig-hs256'.format(
+            TESTTOOL_URL,
+            TESTER_ID),
+        "redirect_uris": [
+            "{}/authz_cb/rp-id_token-bad-sig-hs256".format(
+                BASEURL)],
+        "client_prefs": {
+            "application_type": "web",
+            "application_name": "rphandler",
+            "contacts": ["ops@example.com"],
+            "response_types": ["code"],
+            "scope": ["openid", "profile", "email", "address", "phone"],
+            "token_endpoint_auth_method": ["client_secret_basic"],
+        },
+        'behaviour': {'jwks_uri': '{}/{}'.format(BASEURL, PUBLIC_JWKS_PATH)},
+        "services": [
+            ('ProviderInfoDiscovery', {}),
+            ('Registration', {}),
+            ('Authorization', {}),
+            ('AccessToken', {})
+        ]
+    },
+    'rp-id_token-bad-sig-es256': {
+        'issuer': '{}/{}/rp-id_token-bad-sig-es256'.format(
+            TESTTOOL_URL,
+            TESTER_ID),
+        "redirect_uris": [
+            "{}/authz_cb/rp-id_token-bad-sig-es256".format(
+                BASEURL)],
+        "client_prefs": {
+            "application_type": "web",
+            "application_name": "rphandler",
+            "contacts": ["ops@example.com"],
+            "response_types": ["code"],
+            "scope": ["openid", "profile", "email", "address", "phone"],
+            "token_endpoint_auth_method": ["client_secret_basic"],
+        },
+        'behaviour': {'jwks_uri': '{}/{}'.format(BASEURL, PUBLIC_JWKS_PATH)},
+        "services": [
+            ('ProviderInfoDiscovery', {}),
+            ('Registration', {}),
+            ('Authorization', {}),
+            ('AccessToken', {})
+        ]
+    },
     'rp-key-rotation-op-sign-key-native': {},
     'rp-key-rotation-op-sign-key': {},
     'rp-key-rotation-op-enc-key': {},
     'rp-claims-distributed': {},
     'rp-claims-aggregated': {},
-    'rp-userinfo-sig': {},
-    'rp-userinfo-enc': {},
-    'rp-userinfo-sig+enc': {},
+    'rp-userinfo-sig': {
+        'issuer': '{}/{}/rp-userinfo-sig'.format(
+            TESTTOOL_URL,
+            TESTER_ID),
+        "redirect_uris": [
+            "{}/authz_cb/rp-userinfo-sig".format(
+                BASEURL)],
+        "client_prefs": {
+            "application_type": "web",
+            "application_name": "rphandler",
+            "contacts": ["ops@example.com"],
+            "response_types": ["code"],
+            "scope": ["openid", "profile", "email", "address", "phone"],
+            "token_endpoint_auth_method": ["client_secret_basic"],
+        },
+        "services": [
+            ('ProviderInfoDiscovery', {}),
+            ('Registration', {}),
+            ('Authorization', {}),
+            ('AccessToken', {}),
+            ('UserInfo', {})
+        ]
+    },
+    'rp-userinfo-enc': {
+        'issuer': '{}/{}/rp-userinfo-enc'.format(
+            TESTTOOL_URL,
+            TESTER_ID),
+        "redirect_uris": [
+            "{}/authz_cb/rp-userinfo-enc".format(
+                BASEURL)],
+        "client_prefs": {
+            "application_type": "web",
+            "application_name": "rphandler",
+            "contacts": ["ops@example.com"],
+            "response_types": ["code"],
+            "scope": ["openid", "profile", "email", "address", "phone"],
+            "token_endpoint_auth_method": ["client_secret_basic"],
+        },
+        "services": [
+            ('ProviderInfoDiscovery', {}),
+            ('Registration', {}),
+            ('Authorization', {}),
+            ('AccessToken', {}),
+            ('UserInfo', {})
+        ]
+    },
+    'rp-userinfo-sig+enc': {
+        'issuer': '{}/{}/rp-userinfo-sig+enc'.format(
+            TESTTOOL_URL,
+            TESTER_ID),
+        "redirect_uris": [
+            "{}/authz_cb/rp-userinfo-sig+enc".format(
+                BASEURL)],
+        "client_prefs": {
+            "application_type": "web",
+            "application_name": "rphandler",
+            "contacts": ["ops@example.com"],
+            "response_types": ["code"],
+            "scope": ["openid", "profile", "email", "address", "phone"],
+            "token_endpoint_auth_method": ["client_secret_basic"],
+        },
+        "services": [
+            ('ProviderInfoDiscovery', {}),
+            ('Registration', {}),
+            ('Authorization', {}),
+            ('AccessToken', {}),
+            ('UserInfo', {})
+        ]
+    },
     'rp-3rd_party-init-login': {}
 }

@@ -26,25 +26,32 @@ SIGKEY_NAME = 'sigkey.jwks'
 
 def get_jwks(private_path, keydefs, public_path):
     if os.path.isfile(private_path):
-        _jwks = open(private_path, 'r').read()
-        _kj = KeyJar()
-        _kj.import_jwks(json.loads(_jwks), '')
+        priv_jwks = open(private_path, 'r').read()
     else:
         _kj = build_keyjar(keydefs)[1]
-        jwks = _kj.export_jwks(private=True)
+
+        priv_jwks = _kj.export_jwks(private=True)  # private part
         head, tail = os.path.split(private_path)
         if not os.path.isdir(head):
             os.makedirs(head)
         fp = open(private_path, 'w')
-        fp.write(json.dumps(jwks))
+        fp.write(json.dumps(priv_jwks))
         fp.close()
 
-    jwks = _kj.export_jwks()  # public part
-    fp = open(public_path, 'w')
-    fp.write(json.dumps(jwks))
-    fp.close()
+        pub_jwks = _kj.export_jwks()  # public part
+        head, tail = os.path.split(public_path)
+        if not os.path.isdir(head):
+            os.makedirs(head)
+        fp = open(public_path, 'w')
+        fp.write(json.dumps(pub_jwks))
+        fp.close()
 
-    return _kj
+    return priv_jwks
+
+
+def get_keyjar(private_path, keydefs, public_path):
+    _jwks = get_jwks(private_path, keydefs, public_path)
+    return KeyJar().import_jwks(_jwks, '')
 
 
 if __name__ == '__main__':
@@ -96,19 +103,20 @@ if __name__ == '__main__':
             },
             'log.screen': True,
             'cors.expose_public.on': True
-        }}
+        }
+    }
 
     cprp = importlib.import_module('cprp')
 
     _base_url = config.BASEURL
 
-    _kj = get_jwks(config.PRIVATE_JWKS_PATH, config.KEYDEFS,
-                   config.PUBLIC_JWKS_PATH)
+    _jwks = get_jwks(config.PRIVATE_JWKS_PATH, config.KEYDEFS,
+                     config.PUBLIC_JWKS_PATH)
 
-    rph = RPHandler(base_url=_base_url, hash_seed="BabyHoldOn", keyjar=_kj,
-                    jwks_path=config.PUBLIC_JWKS_PATH,
-                    client_configs=config.CLIENTS,
-                    services=config.SERVICES)
+    jwks_uri = '{}/{}'.format(_base_url, config.PUBLIC_JWKS_PATH)
+    rph = RPHandler(base_url=_base_url, hash_seed="BabyHoldOn", jwks=_jwks,
+                    jwks_path=config.PRIVATE_JWKS_PATH, jwks_uri=jwks_uri,
+                    client_configs=config.CLIENTS, services=config.SERVICES)
 
     cherrypy.tree.mount(cprp.Consumer(rph, 'html'), '/', provider_config)
 
