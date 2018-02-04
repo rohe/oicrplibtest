@@ -1,16 +1,17 @@
+import cherrypy
 import logging
 import sys
 import traceback
 from importlib import import_module
 
-import cherrypy
-from jwkest import as_bytes
+from cryptojwt import as_bytes
 
+from oiccli.client_auth import CLIENT_AUTHN_METHOD
 from oiccli import oauth2
 from oiccli import oic
-from oiccli.client_auth import CLIENT_AUTHN_METHOD
 
 from oicrp import provider
+from oicrp.oic import Client
 
 __author__ = 'Roland Hedberg'
 __version__ = '0.0.2'
@@ -60,10 +61,10 @@ def do_request(client, srv, scope="", response_body_type="",
     except KeyError:
         pass
 
-    return srv.service_request(
-        _info['uri'], method, _body, response_body_type,
-        http_args=_info['http_args'], client_info=client.client_info,
-        **kwargs)
+    return client.service_request(srv, _info['uri'], method, _body,
+                                  response_body_type,
+                                  http_args=_info['http_args'],
+                                  client_info=client.client_info, **kwargs)
 
 
 class RPHandler(object):
@@ -78,7 +79,7 @@ class RPHandler(object):
 
         self.extra = kwargs
 
-        self.client_cls = client_cls or oic.Client
+        self.client_cls = client_cls or Client
         self.services = services
         self.service_factory = service_factory or factory
         self.client_authn_method = client_authn_method
