@@ -23,8 +23,8 @@ PRIVATE_JWKS_PATH = "jwks_dir/jwks.json"
 PUBLIC_JWKS_PATH = 'static/jwks.json'
 # information used when registering the client, this may be the same for all OPs
 
-SERVICES = ['ProviderInfoDiscovery', 'Registration', 'Authorization',
-            'AccessToken', 'RefreshAccessToken', 'UserInfo']
+SERVICES = ['webFinger', 'ProviderInfoDiscovery', 'Registration',
+            'Authorization', 'AccessToken', 'RefreshAccessToken', 'UserInfo']
 
 CLIENT_PREFS = {
     "application_type": "web",
@@ -47,16 +47,16 @@ CLIENTS = {
     "rp-discovery-webfinger-url": {
         'resource': '{}/{}/rp-discovery-webfinger-url'.format(TESTTOOL_URL,
                                                               TESTER_ID),
-        "services": [
-            ('WebFinger', {})
-        ]
+        "services": {
+            'WebFinger': {}
+        }
     },
     "rp-discovery-openid-configuration": {
         'issuer': '{}/{}/rp-discovery-openid-configuration'.format(TESTTOOL_URL,
                                                                    TESTER_ID),
-        "services": [
-            ('ProviderInfoDiscovery', {})
-        ]
+        "services": {
+            'ProviderInfoDiscovery': {}
+        }
     },
     'rp-response_type-code': {
         'issuer': '{}/{}/rp-response_type-code'.format(TESTTOOL_URL,
@@ -71,10 +71,10 @@ CLIENTS = {
             "token_endpoint_auth_method": ["client_secret_basic",
                                            'client_secret_post'],
         },
-        "services": [
-            ('ProviderInfoDiscovery', {}),
-            ('Registration', {}),
-            ('Authorization', {})]
+        "services": {
+            'ProviderInfoDiscovery': {},
+            'Registration': {},
+            'Authorization': {}}
     },
     'rp-token_endpoint-client_secret_basic': {
         'issuer': '{}/{}/rp-token_endpoint-client_secret_basic'.format(
@@ -91,12 +91,12 @@ CLIENTS = {
             "scope": ["openid", "profile", "email", "address", "phone"],
             "token_endpoint_auth_method": ["client_secret_basic"],
         },
-        "services": [
-            ('ProviderInfoDiscovery', {}),
-            ('Registration', {}),
-            ('Authorization', {}),
-            ('AccessToken', {})
-        ]
+        "services": {
+            'ProviderInfoDiscovery': {},
+            'Registration': {},
+            'Authorization': {},
+            'AccessToken': {}
+        }
     },
     'rp-userinfo-bearer-body': {
         'issuer': '{}/{}/rp-userinfo-bearer-body'.format(
@@ -113,13 +113,13 @@ CLIENTS = {
             "scope": ["openid", "profile", "email", "address", "phone"],
             "token_endpoint_auth_method": ["client_secret_basic"],
         },
-        "services": [
-            ('ProviderInfoDiscovery', {}),
-            ('Registration', {}),
-            ('Authorization', {}),
-            ('AccessToken', {}),
-            ('UserInfo', {})
-        ]
+        "services": {
+            'ProviderInfoDiscovery': {},
+            'Registration': {},
+            'Authorization': {},
+            'AccessToken': {},
+            'UserInfo': {}
+        }
     },
     'rp-scope-userinfo-claims': {
         'issuer': '{}/{}/rp-scope-userinfo-claims'.format(
@@ -136,13 +136,13 @@ CLIENTS = {
             "scope": ["openid", "profile", "email", "address", "phone"],
             "token_endpoint_auth_method": ["client_secret_basic"],
         },
-        "services": [
-            ('ProviderInfoDiscovery', {}),
-            ('Registration', {}),
-            ('Authorization', {}),
-            ('AccessToken', {}),
-            ('UserInfo', {})
-        ]
+        "services": {
+            'ProviderInfoDiscovery': {},
+            'Registration': {},
+            'Authorization': {},
+            'AccessToken': {},
+            'UserInfo': {}
+        }
     },
     'rp-nonce-invalid': {
         'issuer': '{}/{}/rp-nonce-invalid'.format(
@@ -159,12 +159,12 @@ CLIENTS = {
             "scope": ["openid", "profile", "email", "address", "phone"],
             "token_endpoint_auth_method": ["client_secret_basic"],
         },
-        "services": [
-            ('ProviderInfoDiscovery', {}),
-            ('Registration', {}),
-            ('Authorization', {}),
-            ('AccessToken', {})
-        ]
+        "services": {
+            'ProviderInfoDiscovery': {},
+            'Registration': {},
+            'Authorization': {},
+            'AccessToken': {}
+        }
     },
     'rp-id_token-kid-absent-single-jwks': {
         'issuer': '{}/{}/rp-id_token-kid-absent-single-jwks'.format(
@@ -181,12 +181,12 @@ CLIENTS = {
             "scope": ["openid", "profile", "email", "address", "phone"],
             "token_endpoint_auth_method": ["client_secret_basic"],
         },
-        "services": [
-            ('ProviderInfoDiscovery', {}),
-            ('Registration', {}),
-            ('Authorization', {}),
-            ('AccessToken', {'verify': {'allow_missing_kid': True}})
-        ]
+        "services": {
+            'ProviderInfoDiscovery': {},
+            'Registration': {},
+            'Authorization': {},
+            'AccessToken': {'verify': {'allow_missing_kid': True}}
+        }
     },
     'rp-id_token-iat': {
         'issuer': '{}/{}/rp-id_token-iat'.format(
@@ -203,12 +203,12 @@ CLIENTS = {
             "scope": ["openid", "profile", "email", "address", "phone"],
             "token_endpoint_auth_method": ["client_secret_basic"],
         },
-        "services": [
-            ('ProviderInfoDiscovery', {}),
-            ('Registration', {}),
-            ('Authorization', {}),
-            ('AccessToken', {})
-        ]
+        "services": {
+            'ProviderInfoDiscovery': {},
+            'Registration': {},
+            'Authorization': {},
+            'AccessToken': {}
+        }
     },
     'rp-id_token-aud': {
         'issuer': '{}/{}/rp-id_token-aud'.format(TESTTOOL_URL, TESTER_ID),
@@ -222,12 +222,12 @@ CLIENTS = {
             "scope": ["openid", "profile", "email", "address", "phone"],
             "token_endpoint_auth_method": ["client_secret_basic"],
         },
-        "services": [
-            ('ProviderInfoDiscovery', {}),
-            ('Registration', {}),
-            ('Authorization', {}),
-            ('AccessToken', {})
-        ]
+        "services": {
+            'ProviderInfoDiscovery': {},
+            'Registration': {},
+            'Authorization': {},
+            'AccessToken': {}
+        }
     },
     'rp-id_token-kid-absent-multiple-jwks': {
         'issuer': '{}/{}/rp-id_token-kid-absent-multiple-jwks'.format(
@@ -244,12 +244,12 @@ CLIENTS = {
             "scope": ["openid", "profile", "email", "address", "phone"],
             "token_endpoint_auth_method": ["client_secret_basic"],
         },
-        "services": [
-            ('ProviderInfoDiscovery', {}),
-            ('Registration', {}),
-            ('Authorization', {}),
-            ('AccessToken', {'verify': {'allow_missing_kid': True}})
-        ]
+        "services": {
+            'ProviderInfoDiscovery': {},
+            'Registration': {},
+            'Authorization': {},
+            'AccessToken': {'verify': {'allow_missing_kid': True}}
+        }
     },
     'rp-id_token-sig-none': {
         'issuer': '{}/{}/rp-id_token-sig-none'.format(
@@ -266,12 +266,12 @@ CLIENTS = {
             "scope": ["openid", "profile", "email", "address", "phone"],
             "token_endpoint_auth_method": ["client_secret_basic"],
         },
-        "services": [
-            ('ProviderInfoDiscovery', {}),
-            ('Registration', {}),
-            ('Authorization', {}),
-            ('AccessToken', {})
-        ]
+        "services": {
+            'ProviderInfoDiscovery': {},
+            'Registration': {},
+            'Authorization': {},
+            'AccessToken': {}
+        }
     },
     'rp-id_token-sig-rs256': {
         'issuer': '{}/{}/rp-id_token-sig-rs256'.format(
@@ -288,12 +288,12 @@ CLIENTS = {
             "scope": ["openid", "profile", "email", "address", "phone"],
             "token_endpoint_auth_method": ["client_secret_basic"],
         },
-        "services": [
-            ('ProviderInfoDiscovery', {}),
-            ('Registration', {}),
-            ('Authorization', {}),
-            ('AccessToken', {})
-        ]
+        "services": {
+            'ProviderInfoDiscovery': {},
+            'Registration': {},
+            'Authorization': {},
+            'AccessToken': {}
+        }
     },
     'rp-id_token-sub': {
         'issuer': '{}/{}/rp-id_token-sub'.format(
@@ -310,12 +310,12 @@ CLIENTS = {
             "scope": ["openid", "profile", "email", "address", "phone"],
             "token_endpoint_auth_method": ["client_secret_basic"],
         },
-        "services": [
-            ('ProviderInfoDiscovery', {}),
-            ('Registration', {}),
-            ('Authorization', {}),
-            ('AccessToken', {})
-        ]
+        "services": {
+            'ProviderInfoDiscovery': {},
+            'Registration': {},
+            'Authorization': {},
+            'AccessToken': {}
+        }
     },
     'rp-id_token-bad-sig-rs256': {
         'issuer': '{}/{}/rp-id_token-bad-sig-rs256'.format(
@@ -332,12 +332,12 @@ CLIENTS = {
             "scope": ["openid", "profile", "email", "address", "phone"],
             "token_endpoint_auth_method": ["client_secret_basic"],
         },
-        "services": [
-            ('ProviderInfoDiscovery', {}),
-            ('Registration', {}),
-            ('Authorization', {}),
-            ('AccessToken', {})
-        ]
+        "services": {
+            'ProviderInfoDiscovery': {},
+            'Registration': {},
+            'Authorization': {},
+            'AccessToken': {}
+        }
     },
     'rp-id_token-issuer-mismatch': {
         'issuer': '{}/{}/rp-id_token-issuer-mismatch'.format(
@@ -354,12 +354,12 @@ CLIENTS = {
             "scope": ["openid", "profile", "email", "address", "phone"],
             "token_endpoint_auth_method": ["client_secret_basic"],
         },
-        "services": [
-            ('ProviderInfoDiscovery', {}),
-            ('Registration', {}),
-            ('Authorization', {}),
-            ('AccessToken', {})
-        ]
+        "services": {
+            'ProviderInfoDiscovery': {},
+            'Registration': {},
+            'Authorization': {},
+            'AccessToken': {}
+        }
     },
     'rp-userinfo-bad-sub-claim': {
         'issuer': '{}/{}/rp-userinfo-bad-sub-claim'.format(
@@ -376,13 +376,13 @@ CLIENTS = {
             "scope": ["openid", "profile", "email"],
             "token_endpoint_auth_method": ["client_secret_basic"],
         },
-        "services": [
-            ('ProviderInfoDiscovery', {}),
-            ('Registration', {}),
-            ('Authorization', {}),
-            ('AccessToken', {}),
-            ('UserInfo', {})
-        ]
+        "services": {
+            'ProviderInfoDiscovery': {},
+            'Registration': {},
+            'Authorization': {},
+            'AccessToken': {},
+            'UserInfo': {}
+        }
     },
     'rp-userinfo-bearer-header': {
         'issuer': '{}/{}/rp-userinfo-bearer-header'.format(
@@ -399,48 +399,48 @@ CLIENTS = {
             "scope": ["openid", "profile", "email", "address", "phone"],
             "token_endpoint_auth_method": ["client_secret_basic"],
         },
-        "services": [
-            ('ProviderInfoDiscovery', {}),
-            ('Registration', {}),
-            ('Authorization', {}),
-            ('AccessToken', {}),
-            ('UserInfo', {'default_authn_method': 'bearer_header'})
-        ]
+        "services": {
+            'ProviderInfoDiscovery': {},
+            'Registration': {},
+            'Authorization': {},
+            'AccessToken': {},
+            'UserInfo': {'default_authn_method': 'bearer_header'}
+        }
     },
     'rp-discovery-webfinger-acct': {
         'resource': 'acct:{}.rp-discovery-webfinger-acct@localhost:8080'.format(
             TESTER_ID),
-        "services": [
-            ('WebFinger', {})
-        ]
+        "services": {
+            'WebFinger': {}
+        }
     },
     'rp-discovery-webfinger-http-href': {
         'resource': '{}/{}/rp-discovery-webfinger-http-href'.format(
             TESTTOOL_URL, TESTER_ID),
-        "services": [
-            ('WebFinger', {})
-        ]
+        "services": {
+            'WebFinger': {}
+        }
     },
     'rp-discovery-jwks_uri-keys': {
         'issuer': '{}/{}/rp-discovery-openid-configuration'.format(TESTTOOL_URL,
                                                                    TESTER_ID),
-        "services": [
-            ('ProviderInfoDiscovery', {'pre_load_keys': True})
-        ]
+        "services": {
+            'ProviderInfoDiscovery': {'pre_load_keys': True}
+        }
     },
     'rp-discovery-issuer-not-matching-config': {
         'issuer': '{}/{}/rp-discovery-issuer-not-matching-config'.format(
             TESTTOOL_URL, TESTER_ID),
-        "services": [
-            ('ProviderInfoDiscovery', {})
-        ]
+        "services": {
+            'ProviderInfoDiscovery': {}
+        }
     },
     'rp-discovery-webfinger-unknown-member': {
         'resource': '{}/{}/rp-discovery-webfinger-unknown-member'.format(
             TESTTOOL_URL, TESTER_ID),
-        "services": [
-            ('WebFinger', {})
-        ]
+        "services": {
+            'WebFinger': {}
+        }
     },
     'rp-registration-dynamic': {
         'issuer': '{}/{}/rp-registration-dynamic'.format(TESTTOOL_URL,
@@ -455,10 +455,10 @@ CLIENTS = {
             "scope": ["openid", "profile", "email", "address", "phone"],
             "token_endpoint_auth_method": ["client_secret_basic"],
         },
-        "services": [
-            ('ProviderInfoDiscovery', {}),
-            ('Registration', {}),
-        ]
+        "services": {
+            'ProviderInfoDiscovery': {},
+            'Registration': {},
+        }
     },
     'rp-request_uri-enc': {
         'issuer': '{}/{}/rp-request_uri-enc'.format(TESTTOOL_URL,
@@ -475,10 +475,10 @@ CLIENTS = {
         },
         'behaviour': {'jwks_uri': '{}/{}'. format(BASEURL, PUBLIC_JWKS_PATH)},
         'requests_dir': 'static',
-        "services": [
-            ('ProviderInfoDiscovery', {}),
-            ('Registration', {}),
-            ('Authorization', {
+        "services": {
+            'ProviderInfoDiscovery': {},
+            'Registration': {},
+            'Authorization': {
                 'pre_construct': {'request_method': 'request_uri'},
                 'post_construct': {
                     'request_method': 'request_uri',
@@ -488,7 +488,8 @@ CLIENTS = {
                     'target': '{}/{}/rp-request_uri-enc'.format(TESTTOOL_URL,
                                                                 TESTER_ID)
                 }
-            })]
+            }
+        }
     },
     'rp-request_uri-sig': {
         'issuer': '{}/{}/rp-request_uri-sig'.format(TESTTOOL_URL,
@@ -505,15 +506,16 @@ CLIENTS = {
         },
         'behaviour': {'jwks_uri': '{}/{}'. format(BASEURL, PUBLIC_JWKS_PATH)},
         'requests_dir': 'static',
-        "services": [
-            ('ProviderInfoDiscovery', {}),
-            ('Registration', {}),
-            ('Authorization', {
+        "services": {
+            'ProviderInfoDiscovery': {},
+            'Registration': {},
+            'Authorization': {
                 'pre_construct': {'request_method': 'request_uri'},
                 'post_construct': {
                     'request_method': 'request_uri',
                     'request_object_signing_alg': 'RS256'}
-            })]
+            }
+        }
     },
     'rp-request_uri-sig+enc': {
         'issuer': '{}/{}/rp-request_uri-sig+enc'.format(TESTTOOL_URL,
@@ -530,10 +532,10 @@ CLIENTS = {
         },
         'behaviour': {'jwks_uri': '{}/{}'. format(BASEURL, PUBLIC_JWKS_PATH)},
         'requests_dir': 'static',
-        "services": [
-            ('ProviderInfoDiscovery', {}),
-            ('Registration', {}),
-            ('Authorization', {
+        "services": {
+            'ProviderInfoDiscovery': {},
+            'Registration': {},
+            'Authorization': {
                 'pre_construct': {'request_method': 'request_uri'},
                 'post_construct': {
                     'request_method': 'request_uri',
@@ -543,7 +545,8 @@ CLIENTS = {
                     'target': '{}/{}/rp-request_uri-enc'.format(TESTTOOL_URL,
                                                                 TESTER_ID)
                 }
-            })]
+            }
+        }
     },
     'rp-request_uri-unsigned': {
         'issuer': '{}/{}/rp-request_uri-unsigned'.format(TESTTOOL_URL,
@@ -560,16 +563,17 @@ CLIENTS = {
                                            'client_secret_post'],
         },
         'requests_dir': 'static',
-        "services": [
-            ('ProviderInfoDiscovery', {}),
-            ('Registration', {}),
-            ('Authorization', {
+        "services": {
+            'ProviderInfoDiscovery': {},
+            'Registration': {},
+            'Authorization': {
                 'pre_construct': {'request_method': 'request_uri'},
                 'post_construct': {
                     'request_method': 'request_uri',
                     'request_object_signing_alg': 'none',
                 }
-            })]
+            }
+        }
     },
     'rp-token_endpoint-private_key_jwt': {
         'issuer': '{}/{}/rp-token_endpoint-private_key_jwt'.format(
@@ -587,12 +591,12 @@ CLIENTS = {
             "token_endpoint_auth_method": ["private_key_jwt"],
         },
         'behaviour': {'jwks_uri': '{}/{}'. format(BASEURL, PUBLIC_JWKS_PATH)},
-        "services": [
-            ('ProviderInfoDiscovery', {}),
-            ('Registration', {}),
-            ('Authorization', {}),
-            ('AccessToken', {})
-        ]
+        "services": {
+            'ProviderInfoDiscovery': {},
+            'Registration': {},
+            'Authorization': {},
+            'AccessToken': {}
+        }
     },
     'rp-token_endpoint-client_secret_post': {
         'issuer': '{}/{}/rp-token_endpoint-client_secret_post'.format(
@@ -610,12 +614,12 @@ CLIENTS = {
             "token_endpoint_auth_method": ["client_secret_post"],
         },
         'behaviour': {'jwks_uri': '{}/{}'.format(BASEURL, PUBLIC_JWKS_PATH)},
-        "services": [
-            ('ProviderInfoDiscovery', {}),
-            ('Registration', {}),
-            ('Authorization', {}),
-            ('AccessToken', {})
-        ]
+        "services": {
+            'ProviderInfoDiscovery': {},
+            'Registration': {},
+            'Authorization': {},
+            'AccessToken': {}
+        }
     },
     'rp-token_endpoint-client_secret_jwt': {
         'issuer': '{}/{}/rp-token_endpoint-client_secret_jwt'.format(
@@ -633,12 +637,12 @@ CLIENTS = {
             "token_endpoint_auth_method": ["client_secret_jwt"],
         },
         'behaviour': {'jwks_uri': '{}/{}'.format(BASEURL, PUBLIC_JWKS_PATH)},
-        "services": [
-            ('ProviderInfoDiscovery', {}),
-            ('Registration', {}),
-            ('Authorization', {}),
-            ('AccessToken', {})
-        ]
+        "services": {
+            'ProviderInfoDiscovery': {},
+            'Registration': {},
+            'Authorization': {},
+            'AccessToken': {}
+        }
     },
     'rp-id_token-sig+enc': {
         'issuer': '{}/{}/rp-id_token-sig+enc'.format(
@@ -656,12 +660,12 @@ CLIENTS = {
             "token_endpoint_auth_method": ["client_secret_basic"],
         },
         'behaviour': {'jwks_uri': '{}/{}'.format(BASEURL, PUBLIC_JWKS_PATH)},
-        "services": [
-            ('ProviderInfoDiscovery', {}),
-            ('Registration', {}),
-            ('Authorization', {}),
-            ('AccessToken', {})
-        ]
+        "services": {
+            'ProviderInfoDiscovery': {},
+            'Registration': {},
+            'Authorization': {},
+            'AccessToken': {}
+        }
     },
     'rp-id_token-sig-hs256': {
         'issuer': '{}/{}/rp-id_token-sig-hs256'.format(
@@ -679,12 +683,12 @@ CLIENTS = {
             "token_endpoint_auth_method": ["client_secret_basic"],
         },
         'behaviour': {'jwks_uri': '{}/{}'.format(BASEURL, PUBLIC_JWKS_PATH)},
-        "services": [
-            ('ProviderInfoDiscovery', {}),
-            ('Registration', {}),
-            ('Authorization', {}),
-            ('AccessToken', {})
-        ]
+        "services": {
+            'ProviderInfoDiscovery': {},
+            'Registration': {},
+            'Authorization': {},
+            'AccessToken': {}
+        }
     },
     'rp-id_token-sig-es256': {
         'issuer': '{}/{}/rp-id_token-sig-es256'.format(
@@ -702,12 +706,12 @@ CLIENTS = {
             "token_endpoint_auth_method": ["client_secret_basic"],
         },
         'behaviour': {'jwks_uri': '{}/{}'.format(BASEURL, PUBLIC_JWKS_PATH)},
-        "services": [
-            ('ProviderInfoDiscovery', {}),
-            ('Registration', {}),
-            ('Authorization', {}),
-            ('AccessToken', {})
-        ]
+        "services": {
+            'ProviderInfoDiscovery': {},
+            'Registration': {},
+            'Authorization': {},
+            'AccessToken': {}
+        }
     },
     'rp-id_token-sig+enc-a128kw': {
         'issuer': '{}/{}/rp-id_token-sig+enc-a128kw'.format(
@@ -725,12 +729,12 @@ CLIENTS = {
             "token_endpoint_auth_method": ["client_secret_basic"],
         },
         'behaviour': {'jwks_uri': '{}/{}'.format(BASEURL, PUBLIC_JWKS_PATH)},
-        "services": [
-            ('ProviderInfoDiscovery', {}),
-            ('Registration', {}),
-            ('Authorization', {}),
-            ('AccessToken', {})
-        ]
+        "services": {
+            'ProviderInfoDiscovery': {},
+            'Registration': {},
+            'Authorization': {},
+            'AccessToken': {}
+        }
     },
     'rp-id_token-bad-sig-hs256': {
         'issuer': '{}/{}/rp-id_token-bad-sig-hs256'.format(
@@ -748,12 +752,12 @@ CLIENTS = {
             "token_endpoint_auth_method": ["client_secret_basic"],
         },
         'behaviour': {'jwks_uri': '{}/{}'.format(BASEURL, PUBLIC_JWKS_PATH)},
-        "services": [
-            ('ProviderInfoDiscovery', {}),
-            ('Registration', {}),
-            ('Authorization', {}),
-            ('AccessToken', {})
-        ]
+        "services": {
+            'ProviderInfoDiscovery': {},
+            'Registration': {},
+            'Authorization': {},
+            'AccessToken': {}
+        }
     },
     'rp-id_token-bad-sig-es256': {
         'issuer': '{}/{}/rp-id_token-bad-sig-es256'.format(
@@ -771,12 +775,12 @@ CLIENTS = {
             "token_endpoint_auth_method": ["client_secret_basic"],
         },
         'behaviour': {'jwks_uri': '{}/{}'.format(BASEURL, PUBLIC_JWKS_PATH)},
-        "services": [
-            ('ProviderInfoDiscovery', {}),
-            ('Registration', {}),
-            ('Authorization', {}),
-            ('AccessToken', {})
-        ]
+        "services": {
+            'ProviderInfoDiscovery': {},
+            'Registration': {},
+            'Authorization': {},
+            'AccessToken': {}
+        }
     },
     'rp-key-rotation-op-sign-key-native': {},
     'rp-key-rotation-op-sign-key': {},
@@ -798,13 +802,13 @@ CLIENTS = {
             "scope": ["openid", "profile", "email", "address", "phone"],
             "token_endpoint_auth_method": ["client_secret_basic"],
         },
-        "services": [
-            ('ProviderInfoDiscovery', {}),
-            ('Registration', {}),
-            ('Authorization', {}),
-            ('AccessToken', {}),
-            ('UserInfo', {})
-        ]
+        "services": {
+            'ProviderInfoDiscovery': {},
+            'Registration': {},
+            'Authorization': {},
+            'AccessToken': {},
+            'UserInfo': {}
+        }
     },
     'rp-userinfo-enc': {
         'issuer': '{}/{}/rp-userinfo-enc'.format(
@@ -821,13 +825,13 @@ CLIENTS = {
             "scope": ["openid", "profile", "email", "address", "phone"],
             "token_endpoint_auth_method": ["client_secret_basic"],
         },
-        "services": [
-            ('ProviderInfoDiscovery', {}),
-            ('Registration', {}),
-            ('Authorization', {}),
-            ('AccessToken', {}),
-            ('UserInfo', {})
-        ]
+        "services": {
+            'ProviderInfoDiscovery': {},
+            'Registration': {},
+            'Authorization': {},
+            'AccessToken': {},
+            'UserInfo': {}
+        }
     },
     'rp-userinfo-sig+enc': {
         'issuer': '{}/{}/rp-userinfo-sig+enc'.format(
@@ -844,13 +848,13 @@ CLIENTS = {
             "scope": ["openid", "profile", "email", "address", "phone"],
             "token_endpoint_auth_method": ["client_secret_basic"],
         },
-        "services": [
-            ('ProviderInfoDiscovery', {}),
-            ('Registration', {}),
-            ('Authorization', {}),
-            ('AccessToken', {}),
-            ('UserInfo', {})
-        ]
+        "services": {
+            'ProviderInfoDiscovery': {},
+            'Registration': {},
+            'Authorization': {},
+            'AccessToken': {},
+            'UserInfo': {}
+        }
     },
     'rp-3rd_party-init-login': {}
 }

@@ -5,13 +5,14 @@ import traceback
 from importlib import import_module
 
 from cryptojwt import as_bytes
+from oidcmsg.key_jar import KeyJar
 
-from oiccli.client_auth import CLIENT_AUTHN_METHOD
-from oiccli import oauth2
-from oiccli import oic
+from oidcservice.client_auth import CLIENT_AUTHN_METHOD
+from oidcservice import oauth2
+from oidcservice import oidc
 
-from oicrp import provider
-from oicrp.oic import Client
+from oidcrp import provider
+from oidcrp.oidc import Client
 
 __author__ = 'Roland Hedberg'
 __version__ = '0.0.2'
@@ -31,6 +32,9 @@ def token_secret_key(sid):
     return "token_secret_%s" % sid
 
 
+SERVICE_ORDER = ['WebFinger', 'ProviderInfoDiscovery', 'Registration',
+                 'Authorization', 'AccessToken', 'RefreshAccessToken',
+                 'UserInfo']
 SERVICE_NAME = "OIC"
 CLIENT_CONFIG = {}
 
@@ -41,15 +45,10 @@ def do_request(client, srv, scope="", response_body_type="",
     if not method:
         method = srv.http_method
 
-    _info = srv.do_request_init(
-        client.client_info, method=method, scope=scope,
-        request_args=request_args, extra_args=extra_args,
-        authn_method=authn_method, http_args=http_args, **kwargs)
-
-    try:
-        _body = _info['body']
-    except KeyError:
-        _body = None
+    _info = srv.get_request_parameters(
+        method=method, scope=scope, request_args=request_args,
+        extra_args=extra_args, authn_method=authn_method, http_args=http_args,
+        **kwargs)
 
     if not response_body_type:
         response_body_type = srv.response_body_type
@@ -61,15 +60,14 @@ def do_request(client, srv, scope="", response_body_type="",
     except KeyError:
         pass
 
-    return client.service_request(srv, _info['uri'], method, _body,
-                                  response_body_type,
-                                  http_args=_info['http_args'],
-                                  client_info=client.client_info, **kwargs)
+    kwargs.update(_info)
+    return client.service_request(srv, response_body_type=response_body_type,
+                                  **kwargs)
 
 
 class RPHandler(object):
     def __init__(self, base_url='', hash_seed="", jwks=None, verify_ssl=False,
-                 services=None, service_factory=None, client_configs=None,
+                 service_factory=None, client_configs=None,
                  client_authn_method=CLIENT_AUTHN_METHOD, client_cls=None,
                  jwks_path='', jwks_uri='', **kwargs):
         self.base_url = base_url
@@ -80,7 +78,6 @@ class RPHandler(object):
         self.extra = kwargs
 
         self.client_cls = client_cls or Client
-        self.services = services
         self.service_factory = service_factory or factory
         self.client_authn_method = client_authn_method
         self.client_configs = client_configs
@@ -92,7 +89,7 @@ class RPHandler(object):
 
     def state2issuer(self, state):
         for iss, rp in self.test_id2rp.items():
-            if state in rp.client_info.state_db:
+            if state in rp.service_context.state_db:
                 return iss
 
     def pick_config(self, issuer):
@@ -102,15 +99,21 @@ class RPHandler(object):
             return self.client_configs['']
 
     def run(self, client, state=''):
-        _srvs = client.client_info.config['services']
-        while client.client_info.service_index < len(_srvs):
-            srv, conf = _srvs[client.client_info.service_index]
+        client.service_context.service_index = 0
+        while client.service_context.service_index < len(SERVICE_ORDER):
+            _service = SERVICE_ORDER[client.service_context.service_index]
+            try:
+                conf = client.service_context.config["services"][_service]
+            except KeyError:
+                client.service_context.service_index += 1
+                continue
+
             _srv = self.service_factory(
-                srv, httplib=client.http, keyjar=client.client_info.keyjar,
+                _service, service_context=client.service_context,
                 client_authn_method=self.client_authn_method, conf=conf)
 
             if _srv.endpoint_name:
-                _srv.endpoint = client.client_info.provider_info[
+                _srv.endpoint = client.service_context.provider_info[
                     _srv.endpoint_name]
 
             if _srv.synchronous is True:
@@ -120,7 +123,8 @@ class RPHandler(object):
                     if _srv.endpoint_name == 'token_endpoint':
                         req_args = {
                             'state': state,
-                            'redirect_uri': client.client_info.redirect_uris[0]}
+                            'redirect_uri':
+                                client.service_context.redirect_uris[0]}
                     elif _srv.endpoint_name == 'userinfo_endpoint':
                         kwargs = {'state': state}
 
@@ -135,9 +139,9 @@ class RPHandler(object):
                     _error_html = '{}<p>{}</p>'.format(_header, _body)
                     return as_bytes(_error_html)
 
-                client.client_info.service_index += 1
+                client.service_context.service_index += 1
             else:
-                _info = _srv.request_info(client.client_info)
+                _info = _srv.request_info(client.service_context)
                 raise cherrypy.HTTPRedirect(_info['uri'])
 
         return b'OK'
@@ -145,23 +149,20 @@ class RPHandler(object):
     def phase0(self, test_id):
         """
         If no client exists for this issuer one is created and initiated with
-        the necessary information for them to be able to communicate.
+        the necessary information for it to be able to communicate.
 
         :param test_id: The Test ID
-        :return: A :py:class:`oiccli.oic.Client` instance
+        :return: A :py:class:`oidcrp.oidc.Client` instance
         """
         try:
             client = self.test_id2rp[test_id]
         except KeyError:
             _cnf = self.pick_config(test_id)
-
+            _services = _cnf['services']
+            keyjar = KeyJar()
+            keyjar.import_jwks_as_json(self.jwks, '')
             try:
-                _services = _cnf['services']
-            except KeyError:
-                _services = self.services
-
-            try:
-                client = self.client_cls(
+                client = self.client_cls(keyjar=keyjar,
                     client_authn_method=self.client_authn_method,
                     verify_ssl=self.verify_ssl, services=_services,
                     service_factory=self.service_factory, config=_cnf)
@@ -171,22 +172,23 @@ class RPHandler(object):
                 logger.error(message)
                 raise
 
-            client.client_info.base_url = self.base_url
-            client.client_info.service_index = 0
-            client.client_info.keyjar.import_jwks_as_json(self.jwks, '')
+            client.service_context.base_url = self.base_url
+            client.service_context.service_index = 0
+            client.service_context.keyjar.import_jwks_as_json(self.jwks, '')
             self.test_id2rp[test_id] = client
 
         return self.run(client)
 
     @staticmethod
     def get_response_type(client, issuer):
-        return client.client_info.behaviour['response_types'][0]
+        return client.service_context.behaviour['response_types'][0]
 
     @staticmethod
     def get_client_authn_method(client, endpoint):
         if endpoint == 'token_endpoint':
             try:
-                am = client.client_info.behaviour['token_endpoint_auth_method']
+                am = client.service_context.behaviour[
+                    'token_endpoint_auth_method']
             except KeyError:
                 am = ''
             else:
@@ -205,15 +207,15 @@ class RPHandler(object):
         :param response: The response in what ever format it was received
         """
 
-        _srvs = client.client_info.config['services']
+        _srvs = client.service_context.config['services']
 
-        srv, conf = _srvs[client.client_info.service_index]
+        srv, conf = _srvs[client.service_context.service_index]
         _srv = self.service_factory(
-            srv, httplib=client.http, keyjar=client.client_info.keyjar,
+            srv, httplib=client.http, keyjar=client.service_context.keyjar,
             client_authn_method=self.client_authn_method, conf=conf)
 
         try:
-            authresp = _srv.parse_response(response, client.client_info,
+            authresp = _srv.parse_response(response, client.service_context,
                                            sformat='dict')
         except Exception as err:
             logger.error('Parsing authresp: {}'.format(err))
@@ -221,20 +223,20 @@ class RPHandler(object):
         else:
             logger.debug('Authz response: {}'.format(authresp.to_dict()))
 
-        client.client_info.service_index += 1
+        client.service_context.service_index += 1
 
         return self.run(client, state=response['state'])
 
 
 def get_service_unique_request(service, request, **kwargs):
     """
-    Get a class instance of a :py:class:`oiccli.request.Request` subclass
+    Get a class instance of a :py:class:`oidcservice.request.Request` subclass
     specific to a specified service
 
     :param service: The name of the service
     :param request: The name of the request
     :param kwargs: Arguments provided when initiating the class
-    :return: An initiated subclass of oiccli.request.Request or None if
+    :return: An initiated subclass of oidcservice.request.Request or None if
         the service or the request could not be found.
     """
     if service in provider.__all__:
@@ -250,9 +252,9 @@ def factory(req_name, **kwargs):
         if req_name[0] == 'oauth2':
             oauth2.service.factory(req_name[1], **kwargs)
         elif req_name[0] == 'oidc':
-            oic.service.factory(req_name[1], **kwargs)
+            oidc.service.factory(req_name[1], **kwargs)
         else:
             return get_service_unique_request(req_name[0], req_name[1],
                                               **kwargs)
     else:
-        return oic.service.factory(req_name, **kwargs)
+        return oidc.service.factory(req_name, **kwargs)

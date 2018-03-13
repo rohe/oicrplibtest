@@ -43,18 +43,18 @@ if sys.version_info[0] == 2 and sys.version_info[1] == 6:
 else:
     extra_install_requires = []
 
-with open('src/oicrplibtest/__init__.py', 'r') as fd:
+with open('src/oidcrplibtest/__init__.py', 'r') as fd:
     version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
                         fd.read(), re.MULTILINE).group(1)
 
 setup(
-    name="oicrplibtest",
+    name="oidcrplibtest",
     version=version,
     description="Test setup",
     author="Roland Hedberg",
     author_email="roland@catalogix.se",
     license="Apache 2.0",
-    packages=["oicrplibtest"],
+    packages=["oidcrplibtest"],
     package_dir={"": "src"},
     classifiers=[
         "Development Status :: 4 - Beta",
@@ -63,7 +63,7 @@ setup(
         "Programming Language :: Python :: 3.6",
         "Topic :: Software Development :: Libraries :: Python Modules"],
     install_requires=[
-        'oicrp',
+        'oidcrp',
     ],
     zip_safe=False,
     cmdclass={'test': PyTest},
