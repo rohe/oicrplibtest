@@ -11,8 +11,9 @@ from oidcservice.client_auth import CLIENT_AUTHN_METHOD
 from oidcservice import oauth2
 from oidcservice import oidc
 
-from oidcrp import provider
+from oidcrp import provider, InMemoryStateDataBase
 from oidcrp.oidc import Client
+from oidcservice.state_interface import StateInterface
 
 __author__ = 'Roland Hedberg'
 __version__ = '0.0.2'
@@ -69,11 +70,18 @@ class RPHandler(object):
     def __init__(self, base_url='', hash_seed="", jwks=None, verify_ssl=False,
                  service_factory=None, client_configs=None,
                  client_authn_method=CLIENT_AUTHN_METHOD, client_cls=None,
-                 jwks_path='', jwks_uri='', **kwargs):
+                 jwks_path='', jwks_uri='', state_db=None, **kwargs):
         self.base_url = base_url
         self.hash_seed = as_bytes(hash_seed)
         self.verify_ssl = verify_ssl
         self.jwks = jwks
+
+        if state_db is None:
+            self.state_db = InMemoryStateDataBase()
+        else:
+            self.state_db = state_db
+
+        self.state_db_interface = StateInterface(self.state_db)
 
         self.extra = kwargs
 
@@ -88,9 +96,7 @@ class RPHandler(object):
         self.test_id2rp = {}
 
     def state2issuer(self, state):
-        for iss, rp in self.test_id2rp.items():
-            if state in rp.service_context.state_db:
-                return iss
+        return self.state_db_interface.get_iss(state)
 
     def pick_config(self, issuer):
         try:
@@ -110,6 +116,7 @@ class RPHandler(object):
 
             _srv = self.service_factory(
                 _service, service_context=client.service_context,
+                state_db=client.state_db,
                 client_authn_method=self.client_authn_method, conf=conf)
 
             if _srv.endpoint_name:
@@ -162,7 +169,7 @@ class RPHandler(object):
             keyjar = KeyJar()
             keyjar.import_jwks_as_json(self.jwks, '')
             try:
-                client = self.client_cls(keyjar=keyjar,
+                client = self.client_cls(keyjar=keyjar, state_db=self.state_db,
                     client_authn_method=self.client_authn_method,
                     verify_ssl=self.verify_ssl, services=_services,
                     service_factory=self.service_factory, config=_cnf)
