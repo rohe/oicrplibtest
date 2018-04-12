@@ -7,13 +7,13 @@ from importlib import import_module
 from cryptojwt import as_bytes
 from oidcmsg.key_jar import KeyJar
 
-from oidcservice.client_auth import CLIENT_AUTHN_METHOD
 from oidcservice import oauth2
 from oidcservice import oidc
 
 from oidcrp import provider, InMemoryStateDataBase
-from oidcrp.oidc import Client
 from oidcservice.state_interface import StateInterface
+from oidcrp import provider
+from oidcrp.oidc import RP
 
 __author__ = 'Roland Hedberg'
 __version__ = '0.0.2'
@@ -69,8 +69,8 @@ def do_request(client, srv, scope="", response_body_type="",
 class RPHandler(object):
     def __init__(self, base_url='', hash_seed="", jwks=None, verify_ssl=False,
                  service_factory=None, client_configs=None,
-                 client_authn_method=CLIENT_AUTHN_METHOD, client_cls=None,
-                 jwks_path='', jwks_uri='', state_db=None, **kwargs):
+                 client_authn_factory=None, client_cls=None,
+                 jwks_path='', jwks_uri='', **kwargs):
         self.base_url = base_url
         self.hash_seed = as_bytes(hash_seed)
         self.verify_ssl = verify_ssl
@@ -85,9 +85,9 @@ class RPHandler(object):
 
         self.extra = kwargs
 
-        self.client_cls = client_cls or Client
+        self.client_cls = client_cls or RP
         self.service_factory = service_factory or factory
-        self.client_authn_method = client_authn_method
+        self.client_authn_factory = client_authn_factory
         self.client_configs = client_configs
         self.jwks_path = jwks_path
         self.jwks_uri = jwks_uri
@@ -116,8 +116,8 @@ class RPHandler(object):
 
             _srv = self.service_factory(
                 _service, service_context=client.service_context,
-                state_db=client.state_db,
-                client_authn_method=self.client_authn_method, conf=conf)
+                client_authn_factory=self.client_authn_factory,
+                state=client.state_db, conf=conf)
 
             if _srv.endpoint_name:
                 _srv.endpoint = client.service_context.provider_info[
@@ -170,7 +170,7 @@ class RPHandler(object):
             keyjar.import_jwks_as_json(self.jwks, '')
             try:
                 client = self.client_cls(keyjar=keyjar, state_db=self.state_db,
-                    client_authn_method=self.client_authn_method,
+                    client_authn_factory=self.client_authn_factory,
                     verify_ssl=self.verify_ssl, services=_services,
                     service_factory=self.service_factory, config=_cnf)
             except Exception as err:
@@ -219,7 +219,7 @@ class RPHandler(object):
         srv, conf = _srvs[client.service_context.service_index]
         _srv = self.service_factory(
             srv, httplib=client.http, keyjar=client.service_context.keyjar,
-            client_authn_method=self.client_authn_method, conf=conf)
+            client_authn_factory=self.client_authn_factory, conf=conf)
 
         try:
             authresp = _srv.parse_response(response, client.service_context,
