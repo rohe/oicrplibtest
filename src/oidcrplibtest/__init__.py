@@ -1,3 +1,7 @@
+import json
+import os
+from urllib.parse import urlparse
+
 import cherrypy
 import logging
 import sys
@@ -5,13 +9,14 @@ import traceback
 from importlib import import_module
 
 from cryptojwt import as_bytes
+
 from oidcmsg.key_jar import KeyJar
 
 from oidcservice import oauth2
 from oidcservice import oidc
-
-from oidcrp import provider, InMemoryStateDataBase
 from oidcservice.state_interface import StateInterface
+
+from oidcrp import InMemoryStateDataBase
 from oidcrp import provider
 from oidcrp.oidc import RP
 
@@ -38,6 +43,64 @@ SERVICE_ORDER = ['WebFinger', 'ProviderInfoDiscovery', 'Registration',
                  'UserInfo']
 SERVICE_NAME = "OIC"
 CLIENT_CONFIG = {}
+
+
+def get_clients(response_type, op, rp):
+    profile_tests = json.loads(open('profile.json').read())[response_type]
+    conf = {}
+    test_dir = "test_conf"
+    for test_id in profile_tests:
+        fname = os.path.join(test_dir, "{}.json".format(test_id))
+        _cnf = json.loads(open(fname).read())
+        try:
+            _cnf['issuer'] = _cnf['issuer'].replace('<OP>', op)
+        except KeyError:
+            _res = _cnf['resource']
+            if '<OP>' in _res:
+                _res = _res.replace('<OP>', op)
+            else:
+                p = urlparse(op)
+                _res = _res.replace('<OP_HOST>', p.netloc)
+            _cnf['resource'] = _res
+
+        try:
+            ru = _cnf['redirect_uris']
+        except KeyError:
+            pass
+        else:
+            ru = [u.replace('<RP>', rp) for u in ru]
+            if response_type == 'code':
+                ru = [u.replace('ihf_cb','authz_cb') for u in ru]
+            _cnf['redirect_uris'] = ru
+
+        try:
+            rt = _cnf['client_preferences']['response_types']
+        except KeyError:
+            pass
+        else:
+            rt = [x.replace('<RESPONSE_TYPE>', response_type) for x in rt]
+            _cnf['client_preferences']['response_types'] = rt
+
+        try:
+            ju = _cnf['client_preferences']['jwks_uri']
+        except KeyError:
+            pass
+        else:
+            _cnf['client_preferences']['jwks_uri'] = ju.replace('<RP>', rp)
+
+        if 'code' not in response_type:
+            try:
+                del _cnf['services']['AccessToken']
+            except KeyError:
+                pass
+        if response_type == 'id_token':
+            try:
+                del _cnf['services']['UserInfo']
+            except KeyError:
+                pass
+
+        conf[test_id] = _cnf
+    return conf
 
 
 def do_request(client, srv, scope="", response_body_type="",
@@ -68,7 +131,7 @@ def do_request(client, srv, scope="", response_body_type="",
 
 class RPHandler(object):
     def __init__(self, base_url='', hash_seed="", jwks=None, verify_ssl=False,
-                 service_factory=None, client_configs=None,
+                 service_factory=None, client_configs=None, state_db=None,
                  client_authn_factory=None, client_cls=None,
                  jwks_path='', jwks_uri='', **kwargs):
         self.base_url = base_url
@@ -105,7 +168,6 @@ class RPHandler(object):
             return self.client_configs['']
 
     def run(self, client, state=''):
-        client.service_context.service_index = 0
         while client.service_context.service_index < len(SERVICE_ORDER):
             _service = SERVICE_ORDER[client.service_context.service_index]
             try:
@@ -117,7 +179,7 @@ class RPHandler(object):
             _srv = self.service_factory(
                 _service, service_context=client.service_context,
                 client_authn_factory=self.client_authn_factory,
-                state=client.state_db, conf=conf)
+                state_db=client.state_db, conf=conf)
 
             if _srv.endpoint_name:
                 _srv.endpoint = client.service_context.provider_info[
@@ -148,8 +210,8 @@ class RPHandler(object):
 
                 client.service_context.service_index += 1
             else:
-                _info = _srv.request_info(client.service_context)
-                raise cherrypy.HTTPRedirect(_info['uri'])
+                _info = _srv.get_request_parameters()
+                raise cherrypy.HTTPRedirect(_info['url'])
 
         return b'OK'
 
@@ -180,10 +242,10 @@ class RPHandler(object):
                 raise
 
             client.service_context.base_url = self.base_url
-            client.service_context.service_index = 0
             client.service_context.keyjar.import_jwks_as_json(self.jwks, '')
             self.test_id2rp[test_id] = client
 
+        client.service_context.service_index = 0
         return self.run(client)
 
     @staticmethod
@@ -214,22 +276,26 @@ class RPHandler(object):
         :param response: The response in what ever format it was received
         """
 
-        _srvs = client.service_context.config['services']
+        _service = SERVICE_ORDER[client.service_context.service_index]
+        conf = client.service_context.config["services"][_service]
 
-        srv, conf = _srvs[client.service_context.service_index]
         _srv = self.service_factory(
-            srv, httplib=client.http, keyjar=client.service_context.keyjar,
-            client_authn_factory=self.client_authn_factory, conf=conf)
+            _service, service_context=client.service_context,
+            client_authn_factory=self.client_authn_factory,
+            state_db=client.state_db, conf=conf)
 
         try:
-            authresp = _srv.parse_response(response, client.service_context,
-                                           sformat='dict')
+            authresp = _srv.parse_response(response, sformat='dict')
         except Exception as err:
             logger.error('Parsing authresp: {}'.format(err))
             raise
         else:
             logger.debug('Authz response: {}'.format(authresp.to_dict()))
 
+        if 'error' in authresp:
+            raise SystemError(authresp.to_dict)
+
+        _srv.update_service_context(authresp, response['state'])
         client.service_context.service_index += 1
 
         return self.run(client, state=response['state'])

@@ -1,0 +1,26 @@
+{
+  "issuer": "<OP>/oicrp/rp-userinfo-bearer-body",
+  "redirect_uris": [
+    "<RP>/ihf_cb/rp-userinfo-bearer-body"
+  ],
+  "client_preferences": {
+    "application_type": "web",
+    "application_name": "rphandler",
+    "contacts": [
+      "ops@example.com"
+    ],
+    "response_types": [
+      "<RESPONSE_TYPE>"
+    ],
+    "scope": [
+      "openid"
+    ]
+  },
+  "services": {
+    "ProviderInfoDiscovery": {},
+    "Registration": {},
+    "Authorization": {},
+    "AccessToken": {},
+    "UserInfo": {"default_authn_method": "bearer_body"}
+  }
+}

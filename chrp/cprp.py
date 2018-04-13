@@ -145,9 +145,15 @@ class Consumer(Root):
 
         rp = self.get_rp(op_hash)
 
-        x = rp.client_info.state_db[kwargs['state']]
-        logger.debug('State info: {}'.format(x))
-        return self.rph.phaseN(rp, kwargs)
+        try:
+            session_info = self.rph.state_db_interface.get_state(
+                kwargs['state'])
+        except KeyError:
+            raise cherrypy.HTTPError(400, 'Unknown state')
+
+        logger.debug('Session info: {}'.format(session_info))
+        res = self.rph.phaseN(rp, kwargs)
+        return as_bytes(res)
 
     def _cp_dispatch(self, vpath):
         # Only get here if vpath != None
@@ -182,17 +188,11 @@ class Consumer(Root):
 
         rp = self.get_rp(op_hash)
 
-        x = rp.client_info.state_db[args['state']]
-        logger.debug('State info: {}'.format(x))
-        res = self.rph.phaseN(x['as'], args)
+        session_info = self.rph.state_db_interface.get_state(args['state'])
+        logger.debug('session info: {}'.format(session_info))
+        res = self.rph.phaseN(rp, args)
 
-        if res[0] is True:
-            fname = os.path.join(self.html_home, 'opresult.html')
-            _pre_html = open(fname, 'r').read()
-            _html = _pre_html.format(result=create_result_page(*res[1:]))
-            return as_bytes(_html)
-        else:
-            raise cherrypy.HTTPError(400, res[1])
+        return as_bytes(res)
 
     @cherrypy.expose
     def implicit_hybrid_flow(self, op_hash='', **kwargs):

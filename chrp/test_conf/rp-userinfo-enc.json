@@ -1,0 +1,30 @@
+{
+  "issuer": "<OP>/oicrp/rp-userinfo-enc",
+  "redirect_uris": [
+    "<RP>/ihf_cb/rp-userinfo-enc"
+  ],
+  "client_preferences": {
+    "application_type": "web",
+    "application_name": "rphandler",
+    "contacts": [
+      "ops@example.com"
+    ],
+    "response_types": [
+      "<RESPONSE_TYPE>"
+    ],
+    "scope": [
+      "openid"
+    ],
+    "token_endpoint_auth_method": "client_secret_basic",
+    "userinfo_encrypted_response_alg": "RSA1_5",
+    "userinfo_encrypted_response_enc": "A128CBC-HS256",
+    "jwks_uri": "<RP>/static/jwks.json"
+  },
+  "services": {
+    "ProviderInfoDiscovery": {},
+    "Registration": {},
+    "Authorization": {},
+    "AccessToken": {},
+    "UserInfo": {}
+  }
+}
