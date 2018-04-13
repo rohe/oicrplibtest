@@ -1,5 +1,5 @@
 {
-  "code": [
+  "C": [
     "rp-token_endpoint-client_secret_jwt",
     "rp-userinfo-bad-sub-claim",
     "rp-claims_request-userinfo",
@@ -49,7 +49,7 @@
     "rp-id_token-sub",
     "rp-userinfo-enc"
   ],
-  "id_token": [
+  "I": [
     "rp-discovery-openid-configuration",
     "rp-request_uri-unsigned",
     "rp-id_token-sig-es256",
@@ -87,7 +87,7 @@
     "rp-id_token-aud",
     "rp-id_token-sub"
   ],
-  "id_token token": [
+  "IT": [
     "rp-userinfo-bad-sub-claim",
     "rp-claims_request-userinfo",
     "rp-discovery-openid-configuration",
@@ -136,7 +136,7 @@
     "rp-id_token-sub",
     "rp-userinfo-enc"
   ],
-  "code id_token": [
+  "CI": [
     "rp-token_endpoint-client_secret_jwt",
     "rp-userinfo-bad-sub-claim",
     "rp-claims_request-userinfo",
@@ -189,7 +189,7 @@
     "rp-id_token-sub",
     "rp-userinfo-enc"
   ],
-  "code token": [
+  "CT": [
     "rp-userinfo-bad-sub-claim",
     "rp-claims_request-userinfo",
     "rp-discovery-openid-configuration",
@@ -237,7 +237,7 @@
     "rp-id_token-sub",
     "rp-userinfo-enc"
   ],
-  "code id_token token": [
+  "CIT": [
     "rp-token_endpoint-client_secret_jwt",
     "rp-userinfo-bad-sub-claim",
     "rp-claims_request-userinfo",

@@ -8,8 +8,11 @@ from urllib.parse import urlparse
 
 from oidcrplibtest import get_clients
 
+from oidcrplibtest import RT
+
 parser = argparse.ArgumentParser()
-parser.add_argument('-r', dest='return_type')
+parser.add_argument('-m', dest='mti', action='store_true')
+parser.add_argument('-p', dest='profile')
 parser.add_argument(dest="config")
 args = parser.parse_args()
 
@@ -39,8 +42,13 @@ _post_html = """  </ol>
 
 _part = [_pre_html]
 
-clients = get_clients(args.return_type, config.TESTTOOL_URL,
-                      config.BASEURL)
+if args.mti:
+    profile_file = 'mti.json'
+else:
+    profile_file = 'full,json'
+
+clients = get_clients(args.profile, RT[args.profile], config.TESTTOOL_URL,
+                      config.BASEURL, profile_file)
 
 _ids = list(clients.keys())
 _ids.sort()

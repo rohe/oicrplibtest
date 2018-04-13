@@ -4,13 +4,14 @@ import json
 import logging
 import os
 import sys
-from urllib.parse import urlparse
 
 import cherrypy
 from oidcmsg.key_jar import build_keyjar
 from oidcmsg.key_jar import KeyJar
 
-from oidcrplibtest import RPHandler, get_clients
+from oidcrplibtest import get_clients
+from oidcrplibtest import RPHandler
+from oidcrplibtest import RT
 
 logger = logging.getLogger("")
 LOGFILE_NAME = 'farp.log'
@@ -61,7 +62,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-t', dest='tls', action='store_true')
     parser.add_argument('-k', dest='insecure', action='store_true')
-    parser.add_argument('-r', dest='return_type')
+    parser.add_argument('-m', dest='mti', action='store_true')
+    parser.add_argument('-p', dest='profile')
     parser.add_argument(dest="config")
     args = parser.parse_args()
 
@@ -115,8 +117,13 @@ if __name__ == '__main__':
     _jwks = get_jwks(config.PRIVATE_JWKS_PATH, config.KEYDEFS,
                      config.PUBLIC_JWKS_PATH)
 
-    clients = get_clients(args.return_type, config.TESTTOOL_URL,
-                          config.BASEURL)
+    if args.mti:
+        profile_file = 'mti.json'
+    else:
+        profile_file = 'full,json'
+
+    clients = get_clients(args.profile, RT[args.profile], config.TESTTOOL_URL,
+                          config.BASEURL, profile_file)
 
     jwks_uri = '{}/{}'.format(_base_url, config.PUBLIC_JWKS_PATH)
     rph = RPHandler(base_url=_base_url, hash_seed="BabyHoldOn", jwks=_jwks,

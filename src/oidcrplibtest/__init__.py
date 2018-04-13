@@ -44,16 +44,27 @@ SERVICE_ORDER = ['WebFinger', 'ProviderInfoDiscovery', 'Registration',
 SERVICE_NAME = "OIC"
 CLIENT_CONFIG = {}
 
+RT = {
+    "CNF": 'code',
+    "DYN": 'code',
+    "C": 'code',
+    "CI": 'code id_token',
+    "CT": 'code token',
+    "CIT": "code id_token token",
+    "I": 'id_token',
+    "IT": 'id-token token'
+}
 
-def get_clients(response_type, op, rp):
-    profile_tests = json.loads(open('profile.json').read())[response_type]
+
+def get_clients(profile, response_type, op, rp, profile_file):
+    profile_tests = json.loads(open(profile_file).read())[profile]
     conf = {}
     test_dir = "test_conf"
     for test_id in profile_tests:
         fname = os.path.join(test_dir, "{}.json".format(test_id))
         _cnf = json.loads(open(fname).read())
         try:
-            _cnf['issuer'] = _cnf['issuer'].replace('<OP>', op)
+            _iss = _cnf['issuer'].replace('<OP>', op)
         except KeyError:
             _res = _cnf['resource']
             if '<OP>' in _res:
@@ -61,7 +72,11 @@ def get_clients(response_type, op, rp):
             else:
                 p = urlparse(op)
                 _res = _res.replace('<OP_HOST>', p.netloc)
+            _res = _res.replace('oicrp','oidc_{}'.format(response_type))
             _cnf['resource'] = _res
+        else:
+            _iss = _cnf['issuer'] = _iss.replace(
+                'oicrp', 'oidc_{}'.format(response_type))
 
         try:
             ru = _cnf['redirect_uris']
