@@ -1,1 +1,39 @@
-{"issuer": "<OP>/oicrp/rp-request_uri-enc", "redirect_uris": ["<RP>/ihf_cb/rp-request_uri-enc"], "client_preferences": {"application_type": "web", "application_name": "rphandler", "contacts": ["ops@example.com"], "response_types": ["<RESPONSE_TYPE>"], "scope": ["openid"], "token_endpoint_auth_method": "client_secret_basic"}, "jwks_uri": "https://localhost:8089/static/jwks.json", "requests_dir": "static", "services": {"ProviderInfoDiscovery": {}, "Registration": {}, "Authorization": {"pre_construct": {"request_method": "request_uri"}, "post_construct": {"request_method": "request_uri", "request_object_signing_alg": "none", "request_object_encryption_alg": "RSA1_5", "request_object_encryption_enc": "A128CBC-HS256", "target": "https://localhost:8080/oicrp/rp-request_uri-enc"}}, "AccessToken": {}}}
+{
+  "issuer": "<OP>/oicrp/rp-request_uri-enc",
+  "redirect_uris": [
+    "<RP>/ihf_cb/rp-request_uri-enc"
+  ],
+  "client_preferences": {
+    "application_type": "web",
+    "application_name": "rphandler",
+    "contacts": [
+      "ops@example.com"
+    ],
+    "response_types": [
+      "<RESPONSE_TYPE>"
+    ],
+    "scope": [
+      "openid"
+    ],
+    "token_endpoint_auth_method": "client_secret_basic"
+  },
+  "jwks_uri": "<RP>/static/jwks.json",
+  "requests_dir": "static",
+  "services": {
+    "ProviderInfoDiscovery": {},
+    "Registration": {},
+    "Authorization": {
+      "pre_construct": {
+        "request_method": "request_uri"
+      },
+      "post_construct": {
+        "request_method": "request_uri",
+        "request_object_signing_alg": "none",
+        "request_object_encryption_alg": "RSA1_5",
+        "request_object_encryption_enc": "A128CBC-HS256",
+        "target": "https://localhost:8080/oicrp/rp-request_uri-enc"
+      }
+    },
+    "AccessToken": {}
+  }
+}

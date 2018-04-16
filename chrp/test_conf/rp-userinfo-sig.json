@@ -18,6 +18,7 @@
     "token_endpoint_auth_method": "client_secret_basic",
     "userinfo_signed_response_alg": "RS256"
   },
+  "jwks_uri": "<RP>/static/jwks.json",
   "services": {
     "ProviderInfoDiscovery": {},
     "Registration": {},

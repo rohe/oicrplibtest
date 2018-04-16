@@ -97,11 +97,11 @@ def get_clients(profile, response_type, op, rp, profile_file):
             _cnf['client_preferences']['response_types'] = rt
 
         try:
-            ju = _cnf['client_preferences']['jwks_uri']
+            ju = _cnf['jwks_uri']
         except KeyError:
             pass
         else:
-            _cnf['client_preferences']['jwks_uri'] = ju.replace('<RP>', rp)
+            _cnf['jwks_uri'] = ju.replace('<RP>', rp)
 
         if 'code' not in response_type:
             try:

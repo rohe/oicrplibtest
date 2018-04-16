@@ -17,7 +17,7 @@
     ],
     "token_endpoint_auth_method": "client_secret_basic"
   },
-  "jwks_uri": "https://localhost:8089/static/jwks.json",
+  "jwks_uri": "<RP>/static/jwks.json",
   "requests_dir": "static",
   "services": {
     "ProviderInfoDiscovery": {},
