@@ -1,1 +1,1 @@
-{"resource": "https://localhost:8080/oicrp/rp-discovery-webfinger-url", "services": {"WebFinger": {}}}
+{"resource": "<OP>/oicrp/rp-discovery-webfinger-url", "services": {"WebFinger": {}}}

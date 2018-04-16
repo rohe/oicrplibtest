@@ -14,7 +14,7 @@ from oidcrplibtest import RPHandler
 from oidcrplibtest import RT
 
 logger = logging.getLogger("")
-LOGFILE_NAME = 'farp.log'
+LOGFILE_NAME = 'rp.log'
 hdlr = logging.FileHandler(LOGFILE_NAME)
 base_formatter = logging.Formatter(
     "%(asctime)s %(name)s:%(levelname)s %(message)s")

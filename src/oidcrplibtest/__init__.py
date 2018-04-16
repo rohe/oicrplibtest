@@ -52,7 +52,7 @@ RT = {
     "CT": 'code token',
     "CIT": "code id_token token",
     "I": 'id_token',
-    "IT": 'id-token token'
+    "IT": 'id_token token'
 }
 
 
@@ -72,11 +72,11 @@ def get_clients(profile, response_type, op, rp, profile_file):
             else:
                 p = urlparse(op)
                 _res = _res.replace('<OP_HOST>', p.netloc)
-            _res = _res.replace('oicrp','oidc_{}'.format(response_type))
+            _res = _res.replace('oicrp', 'oidcrp_{}'.format(profile))
             _cnf['resource'] = _res
         else:
-            _iss = _cnf['issuer'] = _iss.replace(
-                'oicrp', 'oidc_{}'.format(response_type))
+            _iss = _cnf['issuer'] = _iss.replace('oicrp',
+                                                 'oidcrp_{}'.format(profile))
 
         try:
             ru = _cnf['redirect_uris']
@@ -85,7 +85,7 @@ def get_clients(profile, response_type, op, rp, profile_file):
         else:
             ru = [u.replace('<RP>', rp) for u in ru]
             if response_type == 'code':
-                ru = [u.replace('ihf_cb','authz_cb') for u in ru]
+                ru = [u.replace('ihf_cb', 'authz_cb') for u in ru]
             _cnf['redirect_uris'] = ru
 
         try:
@@ -247,9 +247,11 @@ class RPHandler(object):
             keyjar.import_jwks_as_json(self.jwks, '')
             try:
                 client = self.client_cls(keyjar=keyjar, state_db=self.state_db,
-                    client_authn_factory=self.client_authn_factory,
-                    verify_ssl=self.verify_ssl, services=_services,
-                    service_factory=self.service_factory, config=_cnf)
+                                         client_authn_factory=self.client_authn_factory,
+                                         verify_ssl=self.verify_ssl,
+                                         services=_services,
+                                         service_factory=self.service_factory,
+                                         config=_cnf)
             except Exception as err:
                 logger.error('Failed initiating client: {}'.format(err))
                 message = traceback.format_exception(*sys.exc_info())

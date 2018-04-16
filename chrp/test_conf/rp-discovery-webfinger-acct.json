@@ -1,1 +1,6 @@
-{"resource": "acct:oicrp.rp-discovery-webfinger-acct@localhost:8080", "services": {"WebFinger": {}}}
+{
+  "resource": "acct:oicrp.rp-discovery-webfinger-acct@<OP_HOST>",
+  "services": {
+    "WebFinger": {}
+  }
+}

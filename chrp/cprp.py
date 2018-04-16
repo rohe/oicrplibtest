@@ -3,6 +3,8 @@ import hashlib
 import logging
 import os
 import re
+import sys
+import traceback
 from html import entities as htmlentitydefs
 from urllib.parse import parse_qs
 
@@ -190,9 +192,17 @@ class Consumer(Root):
 
         session_info = self.rph.state_db_interface.get_state(args['state'])
         logger.debug('session info: {}'.format(session_info))
-        res = self.rph.phaseN(rp, args)
-
-        return as_bytes(res)
+        try:
+            res = self.rph.phaseN(rp, args)
+        except Exception as err:
+            message = traceback.format_exception(*sys.exc_info())
+            logger.error(message)
+            _header = '<h2>{} ({})</h2>'.format(err, err.__class__.__name__)
+            _body = '<br>'.join(message)
+            _error_html = '{}<p>{}</p>'.format(_header, _body)
+            return as_bytes(_error_html)
+        else:
+            return as_bytes(res)
 
     @cherrypy.expose
     def implicit_hybrid_flow(self, op_hash='', **kwargs):

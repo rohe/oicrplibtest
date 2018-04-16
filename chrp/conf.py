@@ -27,5 +27,6 @@ PUBLIC_JWKS_PATH = 'static/jwks.json'
 SERVICES = ['webFinger', 'ProviderInfoDiscovery', 'Registration',
             'Authorization', 'AccessToken', 'RefreshAccessToken', 'UserInfo']
 
-TESTTOOL_URL = 'https://localhost:8080'
+# TESTTOOL_URL = 'https://localhost:8080'
+TESTTOOL_URL = 'https://rp.certification.openid.net:8080'
 TESTER_ID = 'oicrp'
