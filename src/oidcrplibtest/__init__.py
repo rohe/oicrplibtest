@@ -1,27 +1,22 @@
 import json
+import logging
 import os
+import sys
+import traceback
 from urllib.parse import urlparse
 
 import cherrypy
-import logging
-import sys
-import traceback
-from importlib import import_module
 
 from cryptojwt import as_bytes
-
 from oidcmsg.key_jar import KeyJar
-
-from oidcservice import oauth2
-from oidcservice import oidc
+from oidcrp import InMemoryStateDataBase
+from oidcrp.oidc import RP
+from oidcservice.oauth2 import service as oauth2_service
+from oidcservice.oidc import service as oidc_service
 from oidcservice.state_interface import StateInterface
 
-from oidcrp import InMemoryStateDataBase
-from oidcrp import provider
-from oidcrp.oidc import RP
-
 __author__ = 'Roland Hedberg'
-__version__ = '0.1.0'
+__version__ = '0.1.1'
 
 logger = logging.getLogger(__name__)
 
@@ -41,8 +36,6 @@ def token_secret_key(sid):
 SERVICE_ORDER = ['WebFinger', 'ProviderInfoDiscovery', 'Registration',
                  'Authorization', 'AccessToken', 'RefreshAccessToken',
                  'UserInfo']
-SERVICE_NAME = "OIC"
-CLIENT_CONFIG = {}
 
 RT = {
     "CNF": 'code',
@@ -57,6 +50,19 @@ RT = {
 
 
 def get_clients(profile, response_type, op, rp, profile_file):
+    """
+    Construct the configurations for all the 'OPs' = tests that is expected
+    to be executed.
+
+    :param profile: The profile that is to be tested, defines which tests are
+        to be run
+    :param response_type: Which response_type to use
+    :param op: The issuer ID for the OP (= the testtool)
+    :param rp: The base URL for the RP (= this entity)
+    :param profile_file: 'full.json' (=ALL) or 'mti.json'
+        (=only MTI functionality)
+    :return: Dictionary with all the configurations keyed by the test ID.
+    """
     profile_tests = json.loads(open(profile_file).read())[profile]
     conf = {}
     test_dir = "test_conf"
@@ -75,8 +81,7 @@ def get_clients(profile, response_type, op, rp, profile_file):
             _res = _res.replace('oicrp', 'oidcrp_{}'.format(profile))
             _cnf['resource'] = _res
         else:
-            _iss = _cnf['issuer'] = _iss.replace('oicrp',
-                                                 'oidcrp_{}'.format(profile))
+            _cnf['issuer'] = _iss.replace('oicrp', 'oidcrp_{}'.format(profile))
 
         try:
             ru = _cnf['redirect_uris']
@@ -118,16 +123,28 @@ def get_clients(profile, response_type, op, rp, profile_file):
     return conf
 
 
-def do_request(client, srv, scope="", response_body_type="",
-               method="", request_args=None, extra_args=None,
-               http_args=None, authn_method="", **kwargs):
+def do_request(client, srv, scope="", response_body_type="", method="",
+               request_args=None, http_args=None, authn_method="", **kwargs):
+    """
+    As a client send a request to the OP and handle the response.
+
+    :param client: The client
+    :param srv: The OP that should receive the request
+    :param scope: Which scope to use.
+    :param response_body_type: The body type of the response
+    :param method: Which HTTP method to use for sending the request
+    :param request_args: Request arguments
+    :param http_args: HTTP arguments
+    :param authn_method: Which client authentication method to use
+    :param kwargs: Extra keyword arguments.
+    :return: The response
+    """
     if not method:
         method = srv.http_method
 
     _info = srv.get_request_parameters(
         method=method, scope=scope, request_args=request_args,
-        extra_args=extra_args, authn_method=authn_method, http_args=http_args,
-        **kwargs)
+        authn_method=authn_method, http_args=http_args, **kwargs)
 
     if not response_body_type:
         response_body_type = srv.response_body_type
@@ -208,7 +225,8 @@ class RPHandler(object):
                         req_args = {
                             'state': state,
                             'redirect_uri':
-                                client.service_context.redirect_uris[0]}
+                                client.service_context.redirect_uris[0]
+                        }
                     elif _srv.endpoint_name == 'userinfo_endpoint':
                         kwargs = {'state': state}
 
@@ -246,12 +264,11 @@ class RPHandler(object):
             keyjar = KeyJar()
             keyjar.import_jwks_as_json(self.jwks, '')
             try:
-                client = self.client_cls(keyjar=keyjar, state_db=self.state_db,
-                                         client_authn_factory=self.client_authn_factory,
-                                         verify_ssl=self.verify_ssl,
-                                         services=_services,
-                                         service_factory=self.service_factory,
-                                         config=_cnf)
+                client = self.client_cls(
+                    keyjar=keyjar, state_db=self.state_db,
+                    client_authn_factory=self.client_authn_factory,
+                    verify_ssl=self.verify_ssl, services=_services,
+                    service_factory=self.service_factory, config=_cnf)
             except Exception as err:
                 logger.error('Failed initiating client: {}'.format(err))
                 message = traceback.format_exception(*sys.exc_info())
@@ -265,23 +282,19 @@ class RPHandler(object):
         client.service_context.service_index = 0
         return self.run(client)
 
-    @staticmethod
-    def get_response_type(client, issuer):
-        return client.service_context.behaviour['response_types'][0]
-
-    @staticmethod
-    def get_client_authn_method(client, endpoint):
-        if endpoint == 'token_endpoint':
-            try:
-                am = client.service_context.behaviour[
-                    'token_endpoint_auth_method']
-            except KeyError:
-                am = ''
-            else:
-                if isinstance(am, str):
-                    return am
-                else:
-                    return am[0]
+    # @staticmethod
+    # def get_client_authn_method(client, endpoint):
+    #     if endpoint == 'token_endpoint':
+    #         try:
+    #             am = client.service_context.behaviour[
+    #                 'token_endpoint_auth_method']
+    #         except KeyError:
+    #             am = ''
+    #         else:
+    #             if isinstance(am, str):
+    #                 return am
+    #             else:
+    #                 return am[0]
 
     # noinspection PyUnusedLocal
     def phaseN(self, client, response):
@@ -289,7 +302,7 @@ class RPHandler(object):
         callback URL you can request the access token the user has
         approved.
 
-        :param issuer: Who sent the response
+        :param client: Who sent the response
         :param response: The response in what ever format it was received
         """
 
@@ -318,33 +331,13 @@ class RPHandler(object):
         return self.run(client, state=response['state'])
 
 
-def get_service_unique_request(service, request, **kwargs):
-    """
-    Get a class instance of a :py:class:`oidcservice.request.Request` subclass
-    specific to a specified service
-
-    :param service: The name of the service
-    :param request: The name of the request
-    :param kwargs: Arguments provided when initiating the class
-    :return: An initiated subclass of oidcservice.request.Request or None if
-        the service or the request could not be found.
-    """
-    if service in provider.__all__:
-        mod = import_module('oicrp.provider.' + service)
-        cls = getattr(mod, request)
-        return cls(**kwargs)
-
-    return None
-
-
 def factory(req_name, **kwargs):
     if isinstance(req_name, tuple):
         if req_name[0] == 'oauth2':
-            oauth2.service.factory(req_name[1], **kwargs)
+            oauth2_service.factory(req_name[1], **kwargs)
         elif req_name[0] == 'oidc':
-            oidc.service.factory(req_name[1], **kwargs)
+            oidc_service.factory(req_name[1], **kwargs)
         else:
-            return get_service_unique_request(req_name[0], req_name[1],
-                                              **kwargs)
+            raise ValueError('Unknown protocol version: {}', req_name[0])
     else:
-        return oidc.service.factory(req_name, **kwargs)
+        return oidc_service.factory(req_name, **kwargs)

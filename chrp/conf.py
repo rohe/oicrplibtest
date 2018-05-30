@@ -24,9 +24,8 @@ KEYDEFS = [
 
 PRIVATE_JWKS_PATH = "jwks_dir/jwks.json"
 PUBLIC_JWKS_PATH = 'static/jwks.json'
-# information used when registering the client, this may be the same for all OPs
 
-SERVICES = ['webFinger', 'ProviderInfoDiscovery', 'Registration',
+SERVICES = ['WebFinger', 'ProviderInfoDiscovery', 'Registration',
             'Authorization', 'AccessToken', 'RefreshAccessToken', 'UserInfo']
 
 TESTTOOL_URL = 'https://rp.certification.openid.net:8080'

@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 import importlib
-import json
 import logging
 import os
 import sys
 
 import cherrypy
-from oidcmsg.key_jar import build_keyjar
-from oidcmsg.key_jar import KeyJar
+from oidcmsg.key_jar import init_key_jar
 
-from oidcrplibtest import get_clients
 from oidcrplibtest import RPHandler
 from oidcrplibtest import RT
+from oidcrplibtest import get_clients
 
 logger = logging.getLogger("")
 LOGFILE_NAME = 'rp.log'
@@ -22,38 +20,6 @@ base_formatter = logging.Formatter(
 hdlr.setFormatter(base_formatter)
 logger.addHandler(hdlr)
 logger.setLevel(logging.DEBUG)
-
-SIGKEY_NAME = 'sigkey.jwks'
-
-
-def get_jwks(private_path, keydefs, public_path):
-    if os.path.isfile(private_path):
-        priv_jwks = open(private_path, 'r').read()
-    else:
-        _kj = build_keyjar(keydefs)[1]
-
-        priv_jwks = _kj.export_jwks(private=True)  # private part
-        head, tail = os.path.split(private_path)
-        if not os.path.isdir(head):
-            os.makedirs(head)
-        fp = open(private_path, 'w')
-        fp.write(json.dumps(priv_jwks))
-        fp.close()
-
-        pub_jwks = _kj.export_jwks()  # public part
-        head, tail = os.path.split(public_path)
-        if not os.path.isdir(head):
-            os.makedirs(head)
-        fp = open(public_path, 'w')
-        fp.write(json.dumps(pub_jwks))
-        fp.close()
-
-    return priv_jwks
-
-
-def get_keyjar(private_path, keydefs, public_path):
-    _jwks = get_jwks(private_path, keydefs, public_path)
-    return KeyJar().import_jwks(_jwks, '')
 
 
 if __name__ == '__main__':
@@ -79,17 +45,18 @@ if __name__ == '__main__':
             _port = 80
 
     cherrypy.config.update(
-        {'environment': 'production',
-         'log.error_file': 'error.log',
-         'log.access_file': 'access.log',
-         'tools.trailing_slash.on': False,
-         'server.socket_host': '0.0.0.0',
-         'log.screen': True,
-         'tools.sessions.on': True,
-         'tools.encode.on': True,
-         'tools.encode.encoding': 'utf-8',
-         'server.socket_port': _port
-         })
+        {
+            'environment': 'production',
+            'log.error_file': 'error.log',
+            'log.access_file': 'access.log',
+            'tools.trailing_slash.on': False,
+            'server.socket_host': '0.0.0.0',
+            'log.screen': True,
+            'tools.sessions.on': True,
+            'tools.encode.on': True,
+            'tools.encode.encoding': 'utf-8',
+            'server.socket_port': _port
+        })
 
     provider_config = {
         '/': {
@@ -114,14 +81,17 @@ if __name__ == '__main__':
 
     _base_url = config.BASEURL
 
-    _jwks = get_jwks(config.PRIVATE_JWKS_PATH, config.KEYDEFS,
-                     config.PUBLIC_JWKS_PATH)
+    _jwks = init_key_jar(private_path=config.PRIVATE_JWKS_PATH,
+                         key_defs=config.KEYDEFS,
+                         public_path=config.PUBLIC_JWKS_PATH)
 
     if args.mti:
         profile_file = 'mti.json'
     else:
-        profile_file = 'full,json'
+        profile_file = 'full.json'
 
+    # The client configurations are built dynamically based on the test
+    # descriptions.
     clients = get_clients(args.profile, RT[args.profile], config.TESTTOOL_URL,
                           config.BASEURL, profile_file)
 
