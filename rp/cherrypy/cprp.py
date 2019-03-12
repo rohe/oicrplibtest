@@ -9,7 +9,7 @@ from html import entities as htmlentitydefs
 from urllib.parse import parse_qs
 
 import cherrypy
-from cryptojwt import as_bytes
+from cryptojwt.utils import as_bytes
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +64,7 @@ def create_result_page(userinfo, access_token, client):
     """
     Display information from the Authentication.
     """
+
     element = ["<h2>You have successfully logged in!</h2>",
                "<dl><dt>Accesstoken</dt><dd>{}</dd>".format(access_token),
                "<h3>Endpoints</h3>"]
@@ -117,10 +118,12 @@ class Root(object):
 class Consumer(Root):
     _cp_config = {'request.error_response': handle_error}
 
-    def __init__(self, rph, html_home='.', static_dir='static'):
+    def __init__(self, rph, html_home='.', static_dir='static',
+                 template_handler=None):
         self.rph = rph
         self.html_home = html_home
         self.static_dir = static_dir
+        self.template_handler = template_handler
 
     @cherrypy.expose
     def index(self, test_id=''):
@@ -148,7 +151,7 @@ class Consumer(Root):
         rp = self.get_rp(op_hash)
 
         try:
-            session_info = self.rph.state_db_interface.get_state(
+            session_info = self.rph.session_interface.get_state(
                 kwargs['state'])
         except KeyError:
             raise cherrypy.HTTPError(400, 'Unknown state')
@@ -157,13 +160,19 @@ class Consumer(Root):
         res = self.rph.phaseN(rp, kwargs)
         return as_bytes(res)
 
+    @cherrypy.expose
+    def send_js(self, path):
+        with open(path) as fp:
+            txt = as_bytes(fp.read())
+            return as_bytes(txt)
+
     def _cp_dispatch(self, vpath):
         # Only get here if vpath != None
         ent = cherrypy.request.remote.ip
         logger.info('ent:{}, vpath: {}'.format(ent, vpath))
 
         if vpath[0] in self.static_dir:
-            return self
+            return self.send_js(os.path.join(*vpath))
         elif len(vpath) == 1:
             cherrypy.request.params['test_id'] = vpath.pop(0)
             return self.index
@@ -179,6 +188,9 @@ class Consumer(Root):
             elif a == 'ihf_cb':
                 cherrypy.request.params['op_hash'] = b
                 return self.implicit_hybrid_flow
+            elif a == 'post_logout':
+                cherrypy.request.params['op_hash'] = b
+                return self.post_logout
 
         return self
 
@@ -190,7 +202,7 @@ class Consumer(Root):
 
         rp = self.get_rp(op_hash)
 
-        session_info = self.rph.state_db_interface.get_state(args['state'])
+        session_info = self.rph.session_interface.get_state(args['state'])
         logger.debug('session info: {}'.format(session_info))
         try:
             res = self.rph.phaseN(rp, args)
@@ -219,3 +231,7 @@ class Consumer(Root):
             txt = f.read()
             txt = txt % value
             return txt
+
+    @cherrypy.expose
+    def post_logout(self, op_hash='', **kwargs):
+        return b'OK'

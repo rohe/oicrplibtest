@@ -5,7 +5,9 @@ import os
 import sys
 
 import cherrypy
-from oidcmsg.key_jar import init_key_jar
+from cryptojwt.key_jar import init_key_jar
+from jinja2 import Environment
+from jinja2 import FileSystemLoader
 
 from oidcrplibtest import RPHandler
 from oidcrplibtest import RT
@@ -20,6 +22,25 @@ base_formatter = logging.Formatter(
 hdlr.setFormatter(base_formatter)
 logger.addHandler(hdlr)
 logger.setLevel(logging.DEBUG)
+
+
+class TemplateHandler(object):
+    def __init__(self):
+        pass
+
+    def render(self, template, **kwargs):
+        raise NotImplemented()
+
+
+class Jinja2TemplateHandler(TemplateHandler):
+    def __init__(self, template_env):
+        TemplateHandler.__init__(self)
+        self.template_env = template_env
+
+    def render(self, template, **kwargs):
+        template = self.template_env.get_template(template)
+
+        return template.render(**kwargs)
 
 
 if __name__ == '__main__':
@@ -81,9 +102,10 @@ if __name__ == '__main__':
 
     _base_url = config.BASEURL
 
-    _jwks = init_key_jar(private_path=config.PRIVATE_JWKS_PATH,
+    keyjar = init_key_jar(private_path=config.PRIVATE_JWKS_PATH,
                          key_defs=config.KEYDEFS,
-                         public_path=config.PUBLIC_JWKS_PATH)
+                         public_path=config.PUBLIC_JWKS_PATH,
+                         read_only=False)
 
     if args.mti:
         profile_file = 'mti.json'
@@ -95,12 +117,18 @@ if __name__ == '__main__':
     clients = get_clients(args.profile, RT[args.profile], config.TESTTOOL_URL,
                           config.BASEURL, profile_file)
 
+    template_dir = config.TEMPLATE_DIR
+    jinja_env = Environment(loader=FileSystemLoader(template_dir))
+    template_handler = Jinja2TemplateHandler(jinja_env)
+
     jwks_uri = '{}/{}'.format(_base_url, config.PUBLIC_JWKS_PATH)
-    rph = RPHandler(base_url=_base_url, hash_seed="BabyHoldOn", jwks=_jwks,
+    rph = RPHandler(base_url=_base_url, hash_seed="BabyHoldOn", keyjar=keyjar,
                     jwks_path=config.PRIVATE_JWKS_PATH, jwks_uri=jwks_uri,
                     client_configs=clients, services=config.SERVICES)
 
-    cherrypy.tree.mount(cprp.Consumer(rph, 'html'), '/', provider_config)
+    cherrypy.tree.mount(cprp.Consumer(rph, 'html',
+                                      template_handler=template_handler),
+                        '/', provider_config)
 
     # If HTTPS
     if args.tls:

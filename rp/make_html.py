@@ -3,12 +3,9 @@ import argparse
 import importlib
 import os
 import sys
-import json
-from urllib.parse import urlparse
-
-from oidcrplibtest import get_clients
 
 from oidcrplibtest import RT
+from oidcrplibtest import get_clients
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-m', dest='mti', action='store_true')
@@ -32,8 +29,8 @@ _pre_html = """
   <ol>"""
 
 pattern = """<li>
-    <a href="https://0.0.0.0:8089/{}">{}</a>
-</li>"""
+    <a href="{}/rp/{{}}">{{}}</a>
+</li>""".format(config.BASEURL)
 
 _post_html = """  </ol>
 </body>
@@ -45,7 +42,7 @@ _part = [_pre_html]
 if args.mti:
     profile_file = 'mti.json'
 else:
-    profile_file = 'full,json'
+    profile_file = 'full.json'
 
 clients = get_clients(args.profile, RT[args.profile], config.TESTTOOL_URL,
                       config.BASEURL, profile_file)

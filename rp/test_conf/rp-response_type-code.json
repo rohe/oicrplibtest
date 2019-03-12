@@ -1,7 +1,7 @@
 {
   "issuer": "<OP>/oicrp/rp-response_type-code",
   "redirect_uris": [
-    "<RP>/ihf_cb/rp-response_type-code"
+    "<RP>/authz_cb/rp-response_type-code"
   ],
   "client_preferences": {
     "application_type": "web",

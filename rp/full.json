@@ -1,5 +1,6 @@
 {
   "C": [
+    "rp-backchannel-rpinitlogout-all",
     "rp-token_endpoint-client_secret_jwt",
     "rp-userinfo-bad-sub-claim",
     "rp-claims_request-userinfo",
@@ -50,6 +51,7 @@
     "rp-userinfo-enc"
   ],
   "I": [
+    "rp-backchannel-rpinitlogout-all",
     "rp-discovery-openid-configuration",
     "rp-request_uri-unsigned",
     "rp-id_token-sig-es256",
@@ -88,6 +90,7 @@
     "rp-id_token-sub"
   ],
   "IT": [
+    "rp-backchannel-rpinitlogout-all",
     "rp-userinfo-bad-sub-claim",
     "rp-claims_request-userinfo",
     "rp-discovery-openid-configuration",
@@ -137,6 +140,7 @@
     "rp-userinfo-enc"
   ],
   "CI": [
+    "rp-backchannel-rpinitlogout-all",
     "rp-token_endpoint-client_secret_jwt",
     "rp-userinfo-bad-sub-claim",
     "rp-claims_request-userinfo",
@@ -190,6 +194,7 @@
     "rp-userinfo-enc"
   ],
   "CT": [
+    "rp-backchannel-rpinitlogout-all",
     "rp-userinfo-bad-sub-claim",
     "rp-claims_request-userinfo",
     "rp-discovery-openid-configuration",
@@ -238,6 +243,7 @@
     "rp-userinfo-enc"
   ],
   "CIT": [
+    "rp-backchannel-rpinitlogout-all",
     "rp-token_endpoint-client_secret_jwt",
     "rp-userinfo-bad-sub-claim",
     "rp-claims_request-userinfo",

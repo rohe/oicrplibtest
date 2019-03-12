@@ -5,15 +5,18 @@ import sys
 import traceback
 from urllib.parse import urlparse
 
-import cherrypy
-
-from cryptojwt import as_bytes
-from oidcmsg.key_jar import KeyJar
+from cryptojwt import KeyJar
+from cryptojwt import as_unicode
+from cryptojwt.utils import as_bytes
+from oidcmsg.exception import MessageException
+from oidcmsg.exception import NotForMe
+from oidcmsg.oidc import verified_claim_name
+from oidcmsg.oidc.session import BackChannelLogoutRequest
 from oidcrp import InMemoryStateDataBase
 from oidcrp.oidc import RP
-from oidcservice.oauth2 import service as oauth2_service
-from oidcservice.oidc import service as oidc_service
+from oidcservice.service_factory import service_factory
 from oidcservice.state_interface import StateInterface
+from requests import Response
 
 __author__ = 'Roland Hedberg'
 __version__ = '0.1.1'
@@ -35,7 +38,7 @@ def token_secret_key(sid):
 
 SERVICE_ORDER = ['WebFinger', 'ProviderInfoDiscovery', 'Registration',
                  'Authorization', 'AccessToken', 'RefreshAccessToken',
-                 'UserInfo']
+                 'UserInfo', 'EndSession']
 
 RT = {
     "CNF": 'code',
@@ -46,7 +49,7 @@ RT = {
     "CIT": "code id_token token",
     "I": 'id_token',
     "IT": 'id_token token'
-}
+    }
 
 
 def get_clients(profile, response_type, op, rp, profile_file):
@@ -101,12 +104,22 @@ def get_clients(profile, response_type, op, rp, profile_file):
             rt = [x.replace('<RESPONSE_TYPE>', response_type) for x in rt]
             _cnf['client_preferences']['response_types'] = rt
 
+        for _uri in ['jwks_uri', 'backchannel_logout_uri',
+                     'frontchannel_logout_uri']:
+            try:
+                ju = _cnf[_uri]
+            except KeyError:
+                pass
+            else:
+                _cnf[_uri] = ju.replace('<RP>', rp)
+
         try:
-            ju = _cnf['jwks_uri']
+            ru = _cnf['post_logout_redirect_uris']
         except KeyError:
             pass
         else:
-            _cnf['jwks_uri'] = ju.replace('<RP>', rp)
+            ru = [u.replace('<RP>', rp) for u in ru]
+            _cnf['post_logout_redirect_uris'] = ru
 
         if 'code' not in response_type:
             try:
@@ -151,6 +164,13 @@ def do_request(client, srv, scope="", response_body_type="", method="",
 
     logger.debug('do_request info: {}'.format(_info))
 
+
+    # map states
+
+    if srv.endpoint_name == 'end_session_endpoint':
+        client.session_interface.store_logout_state2state(request_args['state'],
+                                                          kwargs['state'])
+
     try:
         kwargs['state'] = request_args['state']
     except KeyError:
@@ -162,21 +182,21 @@ def do_request(client, srv, scope="", response_body_type="", method="",
 
 
 class RPHandler(object):
-    def __init__(self, base_url='', hash_seed="", jwks=None, verify_ssl=False,
+    def __init__(self, base_url='', hash_seed="", verify_ssl=False,
                  service_factory=None, client_configs=None, state_db=None,
-                 client_authn_factory=None, client_cls=None,
-                 jwks_path='', jwks_uri='', **kwargs):
+                 client_authn_factory=None, client_cls=None, keyjar=None,
+                 jwks_path='', jwks_uri='', template_handler=None, **kwargs):
         self.base_url = base_url
         self.hash_seed = as_bytes(hash_seed)
         self.verify_ssl = verify_ssl
-        self.jwks = jwks
+        self.keyjar = keyjar
 
         if state_db is None:
             self.state_db = InMemoryStateDataBase()
         else:
             self.state_db = state_db
 
-        self.state_db_interface = StateInterface(self.state_db)
+        self.session_interface = StateInterface(self.state_db)
 
         self.extra = kwargs
 
@@ -186,12 +206,14 @@ class RPHandler(object):
         self.client_configs = client_configs
         self.jwks_path = jwks_path
         self.jwks_uri = jwks_uri
+        self.template_handler = template_handler
 
         # keep track on which RP instance that serves with OP
         self.test_id2rp = {}
+        self.issuer2rp = {}
 
     def state2issuer(self, state):
-        return self.state_db_interface.get_iss(state)
+        return self.session_interface.get_iss(state)
 
     def pick_config(self, issuer):
         try:
@@ -209,9 +231,9 @@ class RPHandler(object):
                 continue
 
             _srv = self.service_factory(
-                _service, service_context=client.service_context,
+                _service, ['oidc'], service_context=client.service_context,
                 client_authn_factory=self.client_authn_factory,
-                state_db=client.state_db, conf=conf)
+                state_db=client.session_interface.state_db, conf=conf)
 
             if _srv.endpoint_name:
                 _srv.endpoint = client.service_context.provider_info[
@@ -226,12 +248,16 @@ class RPHandler(object):
                             'state': state,
                             'redirect_uri':
                                 client.service_context.redirect_uris[0]
-                        }
+                            }
                     elif _srv.endpoint_name == 'userinfo_endpoint':
                         kwargs = {'state': state}
 
                 try:
-                    do_request(client, _srv, request_args=req_args, **kwargs)
+                    if _service == 'EndSession':
+                        kwargs['state'] = client.state
+
+                    resp = do_request(client, _srv, request_args=req_args,
+                                      **kwargs)
                 except Exception as err:
                     message = traceback.format_exception(*sys.exc_info())
                     logger.error(message)
@@ -241,12 +267,15 @@ class RPHandler(object):
                     _error_html = '{}<p>{}</p>'.format(_header, _body)
                     return as_bytes(_error_html)
 
+                if isinstance(resp, dict) and 'http_response' in resp:
+                    return resp
+
                 client.service_context.service_index += 1
             else:
                 _info = _srv.get_request_parameters()
-                raise cherrypy.HTTPRedirect(_info['url'])
+                return {'url': _info['url']}
 
-        return b'OK'
+        return 'OK'
 
     def phase0(self, test_id):
         """
@@ -262,7 +291,7 @@ class RPHandler(object):
             _cnf = self.pick_config(test_id)
             _services = _cnf['services']
             keyjar = KeyJar()
-            keyjar.import_jwks_as_json(self.jwks, '')
+            keyjar.import_jwks(self.keyjar.export_jwks(True, ''), '')
             try:
                 client = self.client_cls(
                     keyjar=keyjar, state_db=self.state_db,
@@ -276,25 +305,13 @@ class RPHandler(object):
                 raise
 
             client.service_context.base_url = self.base_url
-            client.service_context.keyjar.import_jwks_as_json(self.jwks, '')
+            client.service_context.keyjar.import_jwks(
+                self.keyjar.export_jwks(True, ''), '')
             self.test_id2rp[test_id] = client
 
+        self.issuer2rp[client.service_context.issuer] = client
         client.service_context.service_index = 0
         return self.run(client)
-
-    # @staticmethod
-    # def get_client_authn_method(client, endpoint):
-    #     if endpoint == 'token_endpoint':
-    #         try:
-    #             am = client.service_context.behaviour[
-    #                 'token_endpoint_auth_method']
-    #         except KeyError:
-    #             am = ''
-    #         else:
-    #             if isinstance(am, str):
-    #                 return am
-    #             else:
-    #                 return am[0]
 
     # noinspection PyUnusedLocal
     def phaseN(self, client, response):
@@ -310,9 +327,9 @@ class RPHandler(object):
         conf = client.service_context.config["services"][_service]
 
         _srv = self.service_factory(
-            _service, service_context=client.service_context,
+            _service, ['oidc'], service_context=client.service_context,
             client_authn_factory=self.client_authn_factory,
-            state_db=client.state_db, conf=conf)
+            state_db=client.session_interface.state_db, conf=conf)
 
         try:
             authresp = _srv.parse_response(response, sformat='dict')
@@ -327,17 +344,51 @@ class RPHandler(object):
 
         _srv.update_service_context(authresp, response['state'])
         client.service_context.service_index += 1
+        #
+        client.state = response['state']
 
         return self.run(client, state=response['state'])
 
 
-def factory(req_name, **kwargs):
-    if isinstance(req_name, tuple):
-        if req_name[0] == 'oauth2':
-            oauth2_service.factory(req_name[1], **kwargs)
-        elif req_name[0] == 'oidc':
-            oidc_service.factory(req_name[1], **kwargs)
-        else:
-            raise ValueError('Unknown protocol version: {}', req_name[0])
+def backchannel_logout(client, request='', request_args=None):
+    """
+
+    :param request: URL encoded logout request
+    :return:
+    """
+
+    if request:
+        req = BackChannelLogoutRequest().from_urlencoded(as_unicode(request))
     else:
-        return oidc_service.factory(req_name, **kwargs)
+        req = BackChannelLogoutRequest(**request_args)
+
+    kwargs = {
+        'aud': client.service_context.client_id,
+        'iss': client.service_context.issuer,
+        'keyjar': client.service_context.keyjar
+    }
+
+    try:
+        req.verify(**kwargs)
+    except (MessageException, ValueError, NotForMe) as err:
+        raise MessageException('Bogus logout request: {}'.format(err))
+
+    # Find the subject through 'sid' or 'sub'
+
+    try:
+        sub = req[verified_claim_name('logout_token')]['sub']
+    except KeyError:
+        try:
+            sid = req[verified_claim_name('logout_token')]['sid']
+        except KeyError:
+            raise MessageException('Neither "sid" nor "sub"')
+        else:
+            _state = client.session_interface.get_state_by_sid(sid)
+    else:
+        _state = client.session_interface.get_state_by_sub(sub)
+
+    return _state
+
+
+def factory(req_name, module_dirs, **kwargs):
+    return service_factory(req_name, module_dirs, **kwargs)
