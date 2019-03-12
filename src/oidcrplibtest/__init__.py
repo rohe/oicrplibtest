@@ -16,10 +16,9 @@ from oidcrp import InMemoryStateDataBase
 from oidcrp.oidc import RP
 from oidcservice.service_factory import service_factory
 from oidcservice.state_interface import StateInterface
-from requests import Response
 
 __author__ = 'Roland Hedberg'
-__version__ = '0.1.1'
+__version__ = '0.2.0'
 
 logger = logging.getLogger(__name__)
 

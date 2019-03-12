@@ -37,11 +37,7 @@ class PyTest(TestCommand):
         sys.exit(errno)
 
 
-# Python 2.7 and later ship with importlib and argparse
-if sys.version_info[0] == 2 and sys.version_info[1] == 6:
-    extra_install_requires = ["importlib", "argparse"]
-else:
-    extra_install_requires = []
+extra_install_requires = []
 
 with open('src/oidcrplibtest/__init__.py', 'r') as fd:
     version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
@@ -63,7 +59,7 @@ setup(
         "Programming Language :: Python :: 3.6",
         "Topic :: Software Development :: Libraries :: Python Modules"],
     install_requires=[
-        'oidcrp',
+        'oidcrp>=0.6.1',
     ],
     zip_safe=False,
     cmdclass={'test': PyTest},
