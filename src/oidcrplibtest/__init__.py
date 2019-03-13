@@ -291,6 +291,7 @@ class RPHandler(object):
             _services = _cnf['services']
             keyjar = KeyJar()
             keyjar.import_jwks(self.keyjar.export_jwks(True, ''), '')
+            keyjar.verify_ssl = self.verify_ssl
             try:
                 client = self.client_cls(
                     keyjar=keyjar, state_db=self.state_db,

@@ -1,6 +1,13 @@
 {
   "C": [
     "rp-backchannel-rpinitlogout-all",
+    "rp-backchannel-rpinitlogout-lt-alg-none",
+    "rp-backchannel-rpinitlogout-lt-no-event",
+    "rp-backchannel-rpinitlogout-lt-with-nonce",
+    "rp-backchannel-rpinitlogout-lt-wrong-alg",
+    "rp-backchannel-rpinitlogout-lt-wrong-aud",
+    "rp-backchannel-rpinitlogout-lt-wrong-event",
+    "rp-backchannel-rpinitlogout-lt-wrong-issuer",
     "rp-token_endpoint-client_secret_jwt",
     "rp-userinfo-bad-sub-claim",
     "rp-claims_request-userinfo",

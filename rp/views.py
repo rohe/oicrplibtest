@@ -149,7 +149,10 @@ def session_change():
 @oidc_rp_views.route('/post_logout/<op_hash>')
 def session_logout(op_hash):
     logger.debug('post_logout')
-    return "Post logout from {}".format(op_hash)
+    if op_hash == session['logout']:
+        return "Post logout from {}".format(op_hash)
+    else:
+        return "Didn't accept this logout from {}".format(op_hash)
 
 
 # RP initiated logout
@@ -168,9 +171,10 @@ def backchannel_logout(op_hash):
         _state = oidcrp.backchannel_logout(_rp, request.data)
     except Exception as err:
         logger.error('Exception: {}'.format(err))
-        return 'System error!', 400
+        return '{}'.format(err), 400
     else:
         _rp.session_interface.remove_state(_state)
+        session['logout'] = op_hash
         return "OK"
 
 
@@ -181,6 +185,7 @@ def frontchannel_logout(op_hash):
     _iss = request.args['iss']
     if _iss != _rp.service_context.issuer:
         return 'Bad request', 400
+    session['logout'] = op_hash
     _state = _rp.session_interface.get_state_by_sid(sid)
     _rp.session_interface.remove_state(_state)
     return "OK"

@@ -1,0 +1,32 @@
+{
+  "issuer": "<OP>/oicrp/rp-backchannel-rpinitlogout-lt-wrong-issuer",
+  "redirect_uris": [
+    "<RP>/ihf_cb/rp-backchannel-rpinitlogout-lt-wrong-issuer"
+  ],
+  "client_preferences": {
+    "application_type": "web",
+    "application_name": "rphandler",
+    "contacts": [
+      "ops@example.com"
+    ],
+    "response_types": [
+      "<RESPONSE_TYPE>"
+    ],
+    "scope": [
+      "openid"
+    ],
+    "token_endpoint_auth_method": "client_secret_basic",
+    "backchannel_logout_session_required": true
+  },
+  "backchannel_logout_uri": "<RP>/bc_logout/rp-backchannel-rpinitlogout-lt-wrong-issuer",
+  "post_logout_redirect_uris": [
+    "<RP>/post_logout/rp-backchannel-rpinitlogout-lt-wrong-issuer"],
+  "jwks_uri": "<RP>/static/jwks.json",
+  "services": {
+    "ProviderInfoDiscovery": {},
+    "Registration": {},
+    "Authorization": {},
+    "AccessToken": {},
+    "EndSession": {}
+  }
+}
