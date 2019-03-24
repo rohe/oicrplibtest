@@ -55,7 +55,10 @@
     "rp-claims_request-id_token",
     "rp-id_token-aud",
     "rp-id_token-sub",
-    "rp-userinfo-enc"
+    "rp-userinfo-enc",
+    "rp-init-logout",
+    "rp-init-logout-no-state",
+    "rp-init-logout-other-state"
   ],
   "I": [
     "rp-backchannel-rpinitlogout-all",

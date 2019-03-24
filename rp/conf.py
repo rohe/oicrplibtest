@@ -1,5 +1,3 @@
-# BASE = "https://lingon.ladok.umu.se"
-
 PORT = 8089
 
 # If PORT and not default port

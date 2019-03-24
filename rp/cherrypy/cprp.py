@@ -166,6 +166,25 @@ class Consumer(Root):
             txt = as_bytes(fp.read())
             return as_bytes(txt)
 
+    @cherrypy.expose
+    def post_logout(self, op_hash='', **kwargs):
+        # Should check the state
+        rp = self.get_rp(op_hash)
+        try:
+            _state = kwargs['state']
+        except KeyError:
+            return b"Missing logout reference"
+        else:
+            try:
+                session_state = rp.session_interface.get_state_by_logout_state(
+                    _state)
+            except KeyError:
+                return b"Unknown logout reference"
+            else:
+                # should I remove session ?
+                rp.session_interface.remove(session_state)
+                return b"Got back after logout"
+
     def _cp_dispatch(self, vpath):
         # Only get here if vpath != None
         ent = cherrypy.request.remote.ip
@@ -231,7 +250,3 @@ class Consumer(Root):
             txt = f.read()
             txt = txt % value
             return txt
-
-    @cherrypy.expose
-    def post_logout(self, op_hash='', **kwargs):
-        return b'OK'

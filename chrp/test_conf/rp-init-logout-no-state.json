@@ -1,7 +1,7 @@
 {
-  "issuer": "<OP>/oicrp/rp-id_token-kid-absent-single-jwks",
+  "issuer": "<OP>/oicrp/rp-init-logout-no-state",
   "redirect_uris": [
-    "<RP>/ihf_cb/rp-id_token-kid-absent-single-jwks"
+    "<RP>/ihf_cb/rp-init-logout-no-state"
   ],
   "client_preferences": {
     "application_type": "web",
@@ -14,13 +14,16 @@
     ],
     "scope": [
       "openid"
-    ],
-    "token_endpoint_auth_method": "client_secret_basic"
+    ]
   },
+  "post_logout_redirect_uris": [
+    "<RP>/plru/rp-init-logout-no-state"
+  ],
   "services": {
     "ProviderInfoDiscovery": {},
     "Registration": {},
     "Authorization": {},
-    "AccessToken": {}
+    "AccessToken": {},
+    "EndSession": {}
   }
 }

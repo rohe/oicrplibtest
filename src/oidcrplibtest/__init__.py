@@ -85,15 +85,16 @@ def get_clients(profile, response_type, op, rp, profile_file):
         else:
             _cnf['issuer'] = _iss.replace('oicrp', 'oidcrp_{}'.format(profile))
 
-        try:
-            ru = _cnf['redirect_uris']
-        except KeyError:
-            pass
-        else:
-            ru = [u.replace('<RP>', rp) for u in ru]
-            if response_type == 'code':
-                ru = [u.replace('ihf_cb', 'authz_cb') for u in ru]
-            _cnf['redirect_uris'] = ru
+        for typ in ['redirect_uris', 'post_logout_redirect_uris']:
+            try:
+                ru = _cnf[typ]
+            except KeyError:
+                pass
+            else:
+                ru = [u.replace('<RP>', rp) for u in ru]
+                if response_type == 'code':
+                    ru = [u.replace('ihf_cb', 'authz_cb') for u in ru]
+                _cnf[typ] = ru
 
         try:
             rt = _cnf['client_preferences']['response_types']
@@ -113,12 +114,11 @@ def get_clients(profile, response_type, op, rp, profile_file):
                 _cnf[_uri] = ju.replace('<RP>', rp)
 
         try:
-            ru = _cnf['post_logout_redirect_uris']
+            ju = _cnf['jwks_uri']
         except KeyError:
             pass
         else:
-            ru = [u.replace('<RP>', rp) for u in ru]
-            _cnf['post_logout_redirect_uris'] = ru
+            _cnf['jwks_uri'] = ju.replace('<RP>', rp)
 
         if 'code' not in response_type:
             try:
