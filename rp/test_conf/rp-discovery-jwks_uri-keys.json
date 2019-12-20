@@ -1,1 +1,9 @@
-{"issuer": "<OP>/oicrp/rp-discovery-jwks_uri-keys", "services": {"ProviderInfoDiscovery": {}}}
+{
+  "issuer": "<OP>/oicrp/rp-discovery-jwks_uri-keys",
+  "services": {
+    "discovery": {
+      "class": "oidcservice.oidc.provider_info_discovery.ProviderInfoDiscovery",
+      "kwargs": {}
+    }
+  }
+}

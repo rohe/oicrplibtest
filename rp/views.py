@@ -1,10 +1,12 @@
 import json
 import logging
 from urllib.parse import parse_qs
+from urllib.parse import urlparse
 
 import oidcrp
 import werkzeug
 from flask import Blueprint
+from flask import Response
 from flask import current_app
 from flask import redirect
 from flask import render_template
@@ -56,6 +58,8 @@ def get_rp(op_hash):
 
 def finalize(op_hash, request_args):
     rp = get_rp(op_hash)
+    if isinstance(rp, Response):
+        return rp
 
     try:
         session['client_id'] = rp.service_context.registration_response['client_id']
@@ -76,12 +80,17 @@ def finalize(op_hash, request_args):
     logger.debug('Issuer: {}'.format(iss))
     res = current_app.rph.phaseN(rp, request_args)
 
-    if isinstance(res, dict) and 'http_response' in res:
-        _http_response = res["http_response"]
-        loc = _http_response.headers['location']
-        return redirect(loc, _http_response.status_code)
+    if isinstance(res, dict):
+        if 'http_response' in res:
+            _http_response = res["http_response"]
+            loc = _http_response.headers['location']
+            return redirect(loc, _http_response.status_code)
+        else:
+            return make_response(res['error'], 400)
+    elif res == "OK":
+        return make_response('OK', 200)
     else:
-        return make_response(res['error'], 400)
+        return make_response(res, 400)
 
 
 @oidc_rp_views.route('/authz_cb/<op_hash>')
@@ -107,68 +116,91 @@ def ihf_cb(self, op_hash='', **kwargs):
     return render_template('repost_fragment.html')
 
 
-@oidc_rp_views.route('/session_iframe')
-def session_iframe():  # session management
-    logger.debug('session_iframe request_args: {}'.format(request.args))
+def _session_iframe(looked_for_state, op_hash):  # session management
+    _rp = get_rp(op_hash)
 
-    _rp = get_rp(session['op_hash'])
-    session_change_url = "{}/session_change".format(_rp.service_context.base_url)
+    session_change_url = "{}/session_change/{}".format(
+        _rp.service_context.base_url, op_hash)
 
-    _issuer = current_app.rph.test_id2rp[session['op_hash']]
+    _part = urlparse(_rp.service_context.issuer)
+    _issuer = "{}://{}".format(_part.scheme, _part.netloc)
+
     args = {
         'client_id': session['client_id'],
         'session_state': session['session_state'],
         'issuer': _issuer,
-        'session_change_url': session_change_url
+        'session_change_url': session_change_url,
+        'looked_for_state': looked_for_state
     }
     logger.debug('rp_iframe args: {}'.format(args))
+    _rp_iframe_path = _rp.service_context.add_on['status_check']['rp_iframe_path']
+    _page = render_template(_rp_iframe_path, **args)
+    return _page
 
-    return render_template('rp_iframe.html', **args)
+
+@oidc_rp_views.route('/session_verify_changed/<op_hash>')
+def session_verify_changed(op_hash):  # session management
+    logger.debug('session_verify_changed request_args: {}'.format(request.args))
+    return _session_iframe("changed", op_hash)
 
 
-@oidc_rp_views.route('/session_change')
-def session_change():
-    logger.debug('session_change: {}'.format(session['op_hash']))
-    _rp = get_rp(session['op_hash'])
-    # If there is an ID token send it along as a id_token_hint
-    _aserv = _rp.service_context.service['authorization']
-    request_args = {"prompt": "none"}
+@oidc_rp_views.route('/session_verify_unchanged/<op_hash>')
+def session_verify_unchanged(op_hash):  # session management
+    logger.debug('session_verify_unchanged request_args: {}'.format(request.args))
+    return _session_iframe("unchanged", op_hash)
 
-    request_args = _aserv.multiple_extend_request_args(
-        request_args, session['state'], ['id_token'],
-        ['auth_response', 'token_response', 'refresh_token_response'])
 
-    logger.debug('session_change:request_args {}'.format(request_args))
-
-    _info = current_app.rph.init_authorization(_rp, request_args=request_args)
-    logger.debug('session_change:authorization request: {}'.format(_info['url']))
-    return redirect(_info['url'], 303)
+@oidc_rp_views.route('/session_change/<op_hash>')
+def session_change(op_hash):
+    logger.debug('session_change: {}'.format(op_hash))
+    _rp = get_rp(op_hash)
+    res = current_app.rph.run(_rp, session["state"])
+    if isinstance(res, dict):
+        if 'http_response' in res:
+            _http_response = res["http_response"]
+            loc = _http_response.headers['location']
+            return redirect(loc, _http_response.status_code)
+        else:
+            return make_response(res['error'], 400)
+    else:
+        return make_response(res, 200)
 
 
 # post_logout_redirect_uri
 @oidc_rp_views.route('/post_logout/<op_hash>')
 def session_logout(op_hash):
     logger.debug('post_logout')
-    if op_hash == session['logout']:
-        return "Post logout from {}".format(op_hash)
+    _rp = get_rp(op_hash)
+    _rp.service_context.service_index += 1
+    res = current_app.rph.run(_rp, session["state"])
+    if isinstance(res, dict):
+        if 'http_response' in res:
+            _http_response = res["http_response"]
+            loc = _http_response.headers['location']
+            return redirect(loc, _http_response.status_code)
+        else:
+            return make_response(res['error'], 400)
     else:
-        return "Didn't accept this logout from {}".format(op_hash)
+        return make_response(res, 200)
 
 
 # RP initiated logout
-@oidc_rp_views.route('/logout')
-def logout():
+@oidc_rp_views.route('/logout/<op_hash>')
+def logout(op_hash):
     logger.debug('logout')
+    _rp = get_rp(op_hash)
     _info = current_app.rph.logout(state=session['state'])
     logger.debug('logout redirect to "{}"'.format(_info['url']))
     return redirect(_info['url'], 303)
 
 
-@oidc_rp_views.route('/bc_logout/<op_hash>', methods=['GET', 'POST'])
+@oidc_rp_views.route('/bc_logout/<op_hash>', methods=['POST'])
 def backchannel_logout(op_hash):
     _rp = get_rp(op_hash)
+
+    logout_token = request.form['logout_token']
     try:
-        _state = oidcrp.backchannel_logout(_rp, request.data)
+        _state = oidcrp.backchannel_logout(_rp, request_args={'logout_token': logout_token})
     except Exception as err:
         logger.error('Exception: {}'.format(err))
         return '{}'.format(err), 400

@@ -1,3 +1,4 @@
+import importlib
 import json
 import logging
 import os
@@ -35,9 +36,9 @@ def token_secret_key(sid):
     return "token_secret_%s" % sid
 
 
-SERVICE_ORDER = ['WebFinger', 'ProviderInfoDiscovery', 'Registration',
-                 'Authorization', 'AccessToken', 'RefreshAccessToken',
-                 'UserInfo', 'EndSession']
+SERVICE_ORDER = ['webfinger', 'discovery', 'registration',
+                 'authorization', 'access_token', 'refresh_access_token',
+                 'userinfo', 'end_session']
 
 RT = {
     "CNF": 'code',
@@ -48,7 +49,7 @@ RT = {
     "CIT": "code id_token token",
     "I": 'id_token',
     "IT": 'id_token token'
-    }
+}
 
 
 def get_clients(profile, response_type, op, rp, profile_file):
@@ -122,12 +123,12 @@ def get_clients(profile, response_type, op, rp, profile_file):
 
         if 'code' not in response_type:
             try:
-                del _cnf['services']['AccessToken']
+                del _cnf['services']['access_token']
             except KeyError:
                 pass
         if response_type == 'id_token':
             try:
-                del _cnf['services']['UserInfo']
+                del _cnf['services']['userinfo']
             except KeyError:
                 pass
 
@@ -163,7 +164,6 @@ def do_request(client, srv, scope="", response_body_type="", method="",
 
     logger.debug('do_request info: {}'.format(_info))
 
-
     # map states
 
     if srv.endpoint_name == 'end_session_endpoint':
@@ -182,7 +182,7 @@ def do_request(client, srv, scope="", response_body_type="", method="",
 
 class RPHandler(object):
     def __init__(self, base_url='', hash_seed="", verify_ssl=False,
-                 service_factory=None, client_configs=None, state_db=None,
+                 client_configs=None, state_db=None,
                  client_authn_factory=None, client_cls=None, keyjar=None,
                  jwks_path='', jwks_uri='', template_handler=None, **kwargs):
         self.base_url = base_url
@@ -220,61 +220,100 @@ class RPHandler(object):
         except KeyError:
             return self.client_configs['']
 
-    def run(self, client, state=''):
-        while client.service_context.service_index < len(SERVICE_ORDER):
-            _service = SERVICE_ORDER[client.service_context.service_index]
+    def do_service(self, client, operation, state):
+        try:
+            conf = client.service_context.config["services"][operation]
+        except KeyError:
+            client.service_context.service_index += 1
+            return None
+
+        kwargs = {
+            'service_context': client.service_context,
+            'state_db': client.session_interface.state_db,
+            'client_authn_factory': self.client_authn_factory
+        }
+
+        if isinstance(conf['class'], str):
+            _srv = importer(conf['class'])(**kwargs)
+        else:
+            _srv = conf['class'](**kwargs)
+
+        # if _service == "session_verify":
+        #   return _srv()
+
+        if _srv.endpoint_name:
+            _srv.endpoint = client.service_context.provider_info[
+                _srv.endpoint_name]
+
+        if _srv.synchronous is True:
+            req_args = {}
+            kwargs = {}
+            if state:
+                if _srv.endpoint_name == 'token_endpoint':
+                    req_args = {
+                        'state': state,
+                        'redirect_uri':
+                            client.service_context.redirect_uris[0]
+                    }
+                elif _srv.endpoint_name == 'userinfo_endpoint':
+                    kwargs = {'state': state}
+
             try:
-                conf = client.service_context.config["services"][_service]
-            except KeyError:
-                client.service_context.service_index += 1
-                continue
+                if operation == 'end_session':
+                    kwargs['state'] = client.state
 
-            _srv = self.service_factory(
-                _service, ['oidc'], service_context=client.service_context,
-                client_authn_factory=self.client_authn_factory,
-                state_db=client.session_interface.state_db, conf=conf)
+                resp = do_request(client, _srv, request_args=req_args,
+                                  **kwargs)
+            except Exception as err:
+                message = traceback.format_exception(*sys.exc_info())
+                logger.error(message)
+                _header = '<h2>{} ({})</h2>'.format(err,
+                                                    err.__class__.__name__)
+                _body = '<br>'.join(message)
+                _error_html = '{}<p>{}</p>'.format(_header, _body)
+                return as_bytes(_error_html)
 
-            if _srv.endpoint_name:
-                _srv.endpoint = client.service_context.provider_info[
-                    _srv.endpoint_name]
+            if isinstance(resp, dict) and 'http_response' in resp:
+                return resp
 
-            if _srv.synchronous is True:
-                req_args = {}
-                kwargs = {}
-                if state:
-                    if _srv.endpoint_name == 'token_endpoint':
-                        req_args = {
-                            'state': state,
-                            'redirect_uri':
-                                client.service_context.redirect_uris[0]
-                            }
-                    elif _srv.endpoint_name == 'userinfo_endpoint':
-                        kwargs = {'state': state}
+            client.service_context.service_index += 1
+        else:
+            _info = _srv.get_request_parameters()
+            return {'url': _info['url']}
 
-                try:
-                    if _service == 'EndSession':
-                        kwargs['state'] = client.state
+    def run(self, client, state=''):
+        while client.service_context.service_index < len(client.operation_sequence):
+            _operation = client.operation_sequence[client.service_context.service_index]
 
-                    resp = do_request(client, _srv, request_args=req_args,
-                                      **kwargs)
-                except Exception as err:
-                    message = traceback.format_exception(*sys.exc_info())
-                    logger.error(message)
-                    _header = '<h2>{} ({})</h2>'.format(err,
-                                                        err.__class__.__name__)
-                    _body = '<br>'.join(message)
-                    _error_html = '{}<p>{}</p>'.format(_header, _body)
-                    return as_bytes(_error_html)
-
-                if isinstance(resp, dict) and 'http_response' in resp:
+            if "." in _operation:
+                add_on, func_spec = _operation.split('.')
+                if add_on in client.service_context.add_on:
+                    client.service_context.service_index += 1
+                    func, arg = func_spec.split(':')
+                    return as_bytes(
+                        client.service_context.add_on[add_on][func](client.service_context, arg))
+            else:
+                resp = self.do_service(client, _operation, state)
+                if resp is None:
+                    continue
+                else:
                     return resp
 
-                client.service_context.service_index += 1
-            else:
-                _info = _srv.get_request_parameters()
-                return {'url': _info['url']}
-
         return 'OK'
+
+    def operation_sequence(self, services, service_instance):
+        _order = []
+        for service in SERVICE_ORDER:
+            try:
+                _class_name = services[service]["class"]
+            except KeyError:
+                pass
+            else:
+                for _name, _si in service_instance.items():
+                    _full_name = "{0}.{1}".format(_si.__class__.__module__, _si.__class__.__name__)
+                    if _class_name == _full_name:
+                        _order.append(service)
+        return _order
 
     def phase0(self, test_id):
         """
@@ -297,16 +336,30 @@ class RPHandler(object):
                     keyjar=keyjar, state_db=self.state_db,
                     client_authn_factory=self.client_authn_factory,
                     verify_ssl=self.verify_ssl, services=_services,
-                    service_factory=self.service_factory, config=_cnf)
+                    config=_cnf)
             except Exception as err:
                 logger.error('Failed initiating client: {}'.format(err))
                 message = traceback.format_exception(*sys.exc_info())
                 logger.error(message)
                 raise
 
+            if "sequence" in _cnf:
+                client.operation_sequence = _cnf["sequence"]
+            else:
+                client.operation_sequence = self.operation_sequence(_services,
+                                                                    client.service_context.service)
             client.service_context.base_url = self.base_url
             client.service_context.keyjar.import_jwks(
                 self.keyjar.export_jwks(True, ''), '')
+            client.service_context.jwks_uri = self.jwks_uri
+            try:
+                _status_cnf = client.service_context.add_on['status_check']
+            except KeyError:
+                pass
+            else:
+                _status_cnf['session_changed_iframe'] += "/" + test_id
+                _status_cnf['session_unchanged_iframe'] += "/" + test_id
+
             self.test_id2rp[test_id] = client
 
         self.issuer2rp[client.service_context.issuer] = client
@@ -323,31 +376,38 @@ class RPHandler(object):
         :param response: The response in what ever format it was received
         """
 
-        _service = SERVICE_ORDER[client.service_context.service_index]
-        conf = client.service_context.config["services"][_service]
-
-        _srv = self.service_factory(
-            _service, ['oidc'], service_context=client.service_context,
-            client_authn_factory=self.client_authn_factory,
-            state_db=client.session_interface.state_db, conf=conf)
-
-        try:
-            authresp = _srv.parse_response(response, sformat='dict')
-        except Exception as err:
-            logger.error('Parsing authresp: {}'.format(err))
-            raise
+        _operation = client.operation_sequence[client.service_context.service_index]
+        if '.' in _operation:
+            pass
         else:
-            logger.debug('Authz response: {}'.format(authresp.to_dict()))
+            conf = client.service_context.config["services"][_operation]
 
-        if 'error' in authresp:
-            raise SystemError(authresp.to_dict)
+            kwargs = {'service_context': client.service_context,
+                      'state_db': client.session_interface.state_db,
+                      'client_authn_factory': self.client_authn_factory}
 
-        _srv.update_service_context(authresp, response['state'])
-        client.service_context.service_index += 1
-        #
-        client.state = response['state']
+            if isinstance(conf['class'], str):
+                _srv = importer(conf['class'])(**kwargs)
+            else:
+                _srv = conf['class'](**kwargs)
 
-        return self.run(client, state=response['state'])
+            try:
+                authresp = _srv.parse_response(response, sformat='dict')
+            except Exception as err:
+                logger.error('Parsing authresp: {}'.format(err))
+                raise
+            else:
+                logger.debug('Authz response: {}'.format(authresp.to_dict()))
+
+            if 'error' in authresp:
+                raise SystemError(authresp.to_dict)
+
+            _srv.update_service_context(authresp, response['state'])
+            client.service_context.service_index += 1
+            #
+            client.state = response['state']
+
+            return self.run(client, state=response['state'])
 
 
 def backchannel_logout(client, request='', request_args=None):
@@ -392,3 +452,24 @@ def backchannel_logout(client, request='', request_args=None):
 
 def factory(req_name, module_dirs, **kwargs):
     return service_factory(req_name, module_dirs, **kwargs)
+
+
+def modsplit(s):
+    """Split importable"""
+    if ':' in s:
+        c = s.split(':')
+        if len(c) != 2:
+            raise ValueError("Syntax error: {s}")
+        return c[0], c[1]
+    else:
+        c = s.split('.')
+        if len(c) < 2:
+            raise ValueError("Syntax error: {s}")
+        return '.'.join(c[:-1]), c[-1]
+
+
+def importer(name):
+    """Import by name"""
+    c1, c2 = modsplit(name)
+    module = importlib.import_module(c1)
+    return getattr(module, c2)

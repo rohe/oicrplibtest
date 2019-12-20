@@ -1,6 +1,9 @@
 {
   "issuer": "<OP>/oicrp/rp-discovery-issuer-not-matching-config",
   "services": {
-    "ProviderInfoDiscovery": {}
+    "discovery": {
+      "class": "oidcservice.oidc.provider_info_discovery.ProviderInfoDiscovery",
+      "kwargs": {}
+    }
   }
 }

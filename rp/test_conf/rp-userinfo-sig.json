@@ -20,10 +20,20 @@
   },
   "jwks_uri": "<RP>/static/jwks.json",
   "services": {
-    "ProviderInfoDiscovery": {},
-    "Registration": {},
-    "Authorization": {},
-    "AccessToken": {},
-    "UserInfo": {}
+    "discovery": {
+        "class": "oidcservice.oidc.provider_info_discovery.ProviderInfoDiscovery",
+        "kwargs": {}},
+    "registration": {
+        "class": "oidcservice.oidc.registration.Registration",
+        "kwargs": {}},
+    "authorization": {
+        "class": "oidcservice.oidc.authorization.Authorization",
+        "kwargs": {}},
+    "access_token": {
+        "class": "oidcservice.oidc.access_token.AccessToken",
+        "kwargs": {}},
+    "userinfo": {
+      "class": "oidcservice.oidc.userinfo.UserInfo"
+    }
   }
 }

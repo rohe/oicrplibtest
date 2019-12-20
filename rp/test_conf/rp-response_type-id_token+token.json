@@ -18,8 +18,14 @@
     "token_endpoint_auth_method": "client_secret_basic"
   },
   "services": {
-    "ProviderInfoDiscovery": {},
-    "Registration": {},
-    "Authorization": {}
+    "discovery": {
+        "class": "oidcservice.oidc.provider_info_discovery.ProviderInfoDiscovery",
+        "kwargs": {}},
+    "registration": {
+        "class": "oidcservice.oidc.registration.Registration",
+        "kwargs": {}},
+    "authorization": {
+        "class": "oidcservice.oidc.authorization.Authorization",
+        "kwargs": {}}
   }
 }

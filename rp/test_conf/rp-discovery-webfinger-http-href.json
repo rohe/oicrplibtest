@@ -1,1 +1,9 @@
-{"resource": "<OP>/oicrp/rp-discovery-webfinger-http-href", "services": {"WebFinger": {}}}
+{
+  "resource": "<OP>/oicrp/rp-discovery-webfinger-http-href",
+  "services": {
+    "webfinger": {
+      "class": "oidcservice.oidc.webfinger.WebFinger",
+      "kwargs": {}
+    }
+  }
+}

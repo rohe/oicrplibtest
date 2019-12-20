@@ -1,0 +1,64 @@
+{
+  "issuer": "<OP>/oicrp/rp-init-logout-session",
+  "redirect_uris": [
+    "<RP>/ihf_cb/rp-init-logout-session"
+  ],
+  "client_preferences": {
+    "application_type": "web",
+    "application_name": "rphandler",
+    "contacts": [
+      "ops@example.com"
+    ],
+    "response_types": [
+      "<RESPONSE_TYPE>"
+    ],
+    "scope": [
+      "openid"
+    ]
+  },
+  "post_logout_redirect_uris": [
+    "<RP>/post_logout/rp-init-logout-session"
+  ],
+  "add_ons": {
+    "status_check": {
+      "function": "oidcservice.oidc.add_on.status_check.add_status_check_support",
+      "kwargs": {
+        "template_file": "html/session_verify.html",
+        "rp_iframe_path": "rp_iframe.html",
+        "session_unchanged_iframe_path": "/session_verify_unchanged",
+        "session_changed_iframe_path": "/session_verify_changed"
+      }
+    }
+  },
+  "services": {
+    "discovery": {
+      "class": "oidcservice.oidc.provider_info_discovery.ProviderInfoDiscovery",
+      "kwargs": {}
+    },
+    "registration": {
+      "class": "oidcservice.oidc.registration.Registration",
+      "kwargs": {}
+    },
+    "authorization": {
+      "class": "oidcservice.oidc.authorization.Authorization",
+      "kwargs": {}
+    },
+    "access_token": {
+      "class": "oidcservice.oidc.access_token.AccessToken",
+      "kwargs": {}
+    },
+    "end_session": {
+      "class": "oidcservice.oidc.end_session.EndSession",
+      "kwargs": {}
+    }
+  },
+  "sequence": [
+    "discovery",
+    "registration",
+    "authorization",
+    "status_check.get_session_status_page:unchanged",
+    "access_token",
+    "end_session",
+    "status_check.get_session_status_page:changed"
+  ]
+}

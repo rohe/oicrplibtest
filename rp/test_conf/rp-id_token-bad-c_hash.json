@@ -1,1 +1,34 @@
-{"issuer": "<OP>/oicrp/rp-id_token-bad-c_hash", "redirect_uris": ["<RP>/ihf_cb/rp-id_token-bad-c_hash"], "client_preferences": {"application_type": "web", "application_name": "rphandler", "contacts": ["ops@example.com"], "response_types": ["<RESPONSE_TYPE>"], "scope": ["openid"], "token_endpoint_auth_method": "client_secret_basic"}, "services": {"ProviderInfoDiscovery": {}, "Registration": {}, "Authorization": {}, "AccessToken": {}}}
+{
+  "issuer": "<OP>/oicrp/rp-id_token-bad-c_hash",
+  "redirect_uris": [
+    "<RP>/ihf_cb/rp-id_token-bad-c_hash"
+  ],
+  "client_preferences": {
+    "application_type": "web",
+    "application_name": "rphandler",
+    "contacts": [
+      "ops@example.com"
+    ],
+    "response_types": [
+      "<RESPONSE_TYPE>"
+    ],
+    "scope": [
+      "openid"
+    ],
+    "token_endpoint_auth_method": "client_secret_basic"
+  },
+  "services": {
+    "discovery": {
+        "class": "oidcservice.oidc.provider_info_discovery.ProviderInfoDiscovery",
+        "kwargs": {}},
+    "registration": {
+        "class": "oidcservice.oidc.registration.Registration",
+        "kwargs": {}},
+    "authorization": {
+        "class": "oidcservice.oidc.authorization.Authorization",
+        "kwargs": {}},
+    "access_token": {
+        "class": "oidcservice.oidc.access_token.AccessToken",
+        "kwargs": {}}
+  }
+}

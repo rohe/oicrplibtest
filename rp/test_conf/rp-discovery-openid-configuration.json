@@ -1,1 +1,9 @@
-{"issuer": "<OP>/oicrp/rp-discovery-openid-configuration", "services": {"ProviderInfoDiscovery": {}}}
+{
+  "issuer": "<OP>/oicrp/rp-discovery-openid-configuration",
+  "services": {
+    "discovery": {
+      "class": "oidcservice.oidc.provider_info_discovery.ProviderInfoDiscovery",
+      "kwargs": {}
+    }
+  }
+}

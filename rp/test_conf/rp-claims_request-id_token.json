@@ -1,1 +1,48 @@
-{"issuer": "<OP>/oicrp/rp-claims_request-id_token", "redirect_uris": ["<RP>/ihf_cb/rp-claims_request-id_token"], "client_preferences": {"application_type": "web", "application_name": "rphandler", "contacts": ["ops@example.com"], "response_types": ["<RESPONSE_TYPE>"], "scope": ["openid"], "token_endpoint_auth_method": "client_secret_basic"}, "services": {"ProviderInfoDiscovery": {}, "Registration": {}, "Authorization": {"pre_construct": {"claims": {"id_token": {"email": {"essential": true}}}}, "AccessToken": {}}}}
+{
+  "issuer": "<OP>/oicrp/rp-claims_request-id_token",
+  "redirect_uris": [
+    "<RP>/ihf_cb/rp-claims_request-id_token"
+  ],
+  "client_preferences": {
+    "application_type": "web",
+    "application_name": "rphandler",
+    "contacts": [
+      "ops@example.com"
+    ],
+    "response_types": [
+      "<RESPONSE_TYPE>"
+    ],
+    "scope": [
+      "openid"
+    ],
+    "token_endpoint_auth_method": "client_secret_basic"
+  },
+  "services": {
+    "discovery": {
+      "class": "oidcservice.oidc.provider_info_discovery.ProviderInfoDiscovery",
+      "kwargs": {}
+    },
+    "registration": {
+      "class": "oidcservice.oidc.registration.Registration",
+      "kwargs": {}
+    },
+    "authorization": {
+      "class": "oidcservice.oidc.authorization.Authorization",
+      "kwargs": {
+        "pre_construct": {
+          "claims": {
+            "id_token": {
+              "email": {
+                "essential": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "access_token": {
+      "class": "oidcservice.oidc.access_token.AccessToken",
+      "kwargs": {}
+    }
+  }
+}

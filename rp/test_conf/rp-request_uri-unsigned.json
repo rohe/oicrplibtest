@@ -20,17 +20,26 @@
   "jwks_uri": "<RP>/static/jwks.json",
   "requests_dir": "static",
   "services": {
-    "ProviderInfoDiscovery": {},
-    "Registration": {},
-    "Authorization": {
-      "pre_construct": {
-        "request_method": "request_uri"
-      },
-      "post_construct": {
-        "request_method": "request_uri",
-        "request_object_signing_alg": "none"
+    "discovery": {
+      "class": "oidcservice.oidc.provider_info_discovery.ProviderInfoDiscovery"
+    },
+    "registration": {
+      "class": "oidcservice.oidc.registration.Registration"
+    },
+    "authorization": {
+      "class": "oidcservice.oidc.authorization.Authorization",
+      "kwargs": {
+        "pre_construct": {
+          "request_method": "request_uri"
+        },
+        "post_construct": {
+          "request_method": "request_uri",
+          "request_object_signing_alg": "none"
+        }
       }
     },
-    "AccessToken": {}
+    "access_token": {
+      "class": "oidcservice.oidc.access_token.AccessToken"
+    }
   }
 }

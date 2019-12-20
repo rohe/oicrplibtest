@@ -1,5 +1,6 @@
 import os
 
+from cryptojwt import KeyJar
 from cryptojwt.key_jar import init_key_jar
 from flask.app import Flask
 from jinja2 import Environment
@@ -11,6 +12,7 @@ from oidcrplibtest import RT
 from oidcrplibtest import get_clients
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
+
 
 class TemplateHandler(object):
     def __init__(self):
@@ -33,11 +35,23 @@ class Jinja2TemplateHandler(TemplateHandler):
 
 def init_oidc_rp_handler(app, args):
     _base_url = app.config.get('BASEURL')
+    rp_keys_conf = app.config.get('RP_KEYS')
+    if rp_keys_conf is None:
+        rp_keys_conf = app.config.get('OIDC_KEYS')
 
-    keyjar = init_key_jar(private_path=app.config.get('PRIVATE_JWKS_PATH'),
-                         key_defs=app.config.get('KEYDEFS'),
-                         public_path=app.config.get('PUBLIC_JWKS_PATH'),
-                         read_only=False)
+    verify_ssl = app.config.get('VERIFY_SSL')
+
+    if rp_keys_conf:
+        _keyjar = init_key_jar(**rp_keys_conf)
+        _path = rp_keys_conf['public_path']
+        if _path.startswith('./'):
+            _path = _path[2:]
+        elif _path.startswith('/'):
+            _path = _path[1:]
+    else:
+        _keyjar = KeyJar()
+        _path = ''
+    _keyjar.verify_ssl = verify_ssl
 
     if args.mti:
         profile_file = 'mti.json'
@@ -50,13 +64,11 @@ def init_oidc_rp_handler(app, args):
                           app.config.get('TESTTOOL_URL'),
                           app.config.get('BASEURL'), profile_file)
 
-    jwks_uri = '{}/{}'.format(_base_url, app.config.get('PUBLIC_JWKS_PATH'))
+    jwks_uri = '{}/{}'.format(_base_url, rp_keys_conf['public_path'])
 
-    rph = RPHandler(base_url=_base_url, hash_seed="BabyHoldOn", keyjar=keyjar,
-                    jwks_path=app.config.get('PRIVATE_JWKS_PATH'),
-                    jwks_uri=jwks_uri,
+    rph = RPHandler(base_url=_base_url, hash_seed="BabyHoldOn", keyjar=_keyjar,
+                    jwks_path=rp_keys_conf['public_path'], jwks_uri=jwks_uri,
                     client_configs=clients, services=app.config.get('SERVICES'))
-
 
     return rph
 

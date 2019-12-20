@@ -1,6 +1,6 @@
 {
   "C": [
-    "rp-backchannel-rpinitlogout-all",
+    "rp-backchannel-rpinitlogout",
     "rp-backchannel-rpinitlogout-lt-alg-none",
     "rp-backchannel-rpinitlogout-lt-no-event",
     "rp-backchannel-rpinitlogout-lt-with-nonce",
@@ -8,6 +8,7 @@
     "rp-backchannel-rpinitlogout-lt-wrong-aud",
     "rp-backchannel-rpinitlogout-lt-wrong-event",
     "rp-backchannel-rpinitlogout-lt-wrong-issuer",
+    "rp-frontchannel-rpinitlogout",
     "rp-token_endpoint-client_secret_jwt",
     "rp-userinfo-bad-sub-claim",
     "rp-claims_request-userinfo",
@@ -58,10 +59,12 @@
     "rp-userinfo-enc",
     "rp-init-logout",
     "rp-init-logout-no-state",
-    "rp-init-logout-other-state"
+    "rp-init-logout-other-state",
+    "rp-init-logout-session"
   ],
   "I": [
-    "rp-backchannel-rpinitlogout-all",
+    "rp-backchannel-rpinitlogout",
+    "rp-frontchannel-rpinitlogout",
     "rp-discovery-openid-configuration",
     "rp-request_uri-unsigned",
     "rp-id_token-sig-es256",
@@ -100,7 +103,8 @@
     "rp-id_token-sub"
   ],
   "IT": [
-    "rp-backchannel-rpinitlogout-all",
+    "rp-backchannel-rpinitlogout",
+    "rp-frontchannel-rpinitlogout",
     "rp-userinfo-bad-sub-claim",
     "rp-claims_request-userinfo",
     "rp-discovery-openid-configuration",
@@ -150,7 +154,8 @@
     "rp-userinfo-enc"
   ],
   "CI": [
-    "rp-backchannel-rpinitlogout-all",
+    "rp-frontchannel-rpinitlogout",
+    "rp-backchannel-rpinitlogout",
     "rp-token_endpoint-client_secret_jwt",
     "rp-userinfo-bad-sub-claim",
     "rp-claims_request-userinfo",
@@ -204,7 +209,8 @@
     "rp-userinfo-enc"
   ],
   "CT": [
-    "rp-backchannel-rpinitlogout-all",
+    "rp-frontchannel-rpinitlogout",
+    "rp-backchannel-rpinitlogout",
     "rp-userinfo-bad-sub-claim",
     "rp-claims_request-userinfo",
     "rp-discovery-openid-configuration",
@@ -253,7 +259,8 @@
     "rp-userinfo-enc"
   ],
   "CIT": [
-    "rp-backchannel-rpinitlogout-all",
+    "rp-frontchannel-rpinitlogout",
+    "rp-backchannel-rpinitlogout",
     "rp-token_endpoint-client_secret_jwt",
     "rp-userinfo-bad-sub-claim",
     "rp-claims_request-userinfo",

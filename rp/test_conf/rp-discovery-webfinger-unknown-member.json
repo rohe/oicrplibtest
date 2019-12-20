@@ -1,6 +1,9 @@
 {
   "resource": "<OP>/oicrp/rp-discovery-webfinger-unknown-member",
   "services": {
-    "WebFinger": {}
+    "webfinger": {
+      "class": "oidcservice.oidc.webfinger.WebFinger",
+      "kwargs": {}
+    }
   }
 }

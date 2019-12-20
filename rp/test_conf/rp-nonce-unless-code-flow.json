@@ -1,1 +1,30 @@
-{"issuer": "<OP>/oicrp/rp-nonce-unless-code-flow", "redirect_uris": ["<RP>/ihf_cb/rp-nonce-unless-code-flow"], "client_preferences": {"application_type": "web", "application_name": "rphandler", "contacts": ["ops@example.com"], "response_types": ["<RESPONSE_TYPE>"], "scope": ["openid"], "token_endpoint_auth_method": "client_secret_basic"}, "services": {"ProviderInfoDiscovery": {}, "Registration": {}, "Authorization": {}, "AccessToken": {}}}
+{
+  "issuer": "<OP>/oicrp/rp-nonce-unless-code-flow",
+  "redirect_uris": [
+    "<RP>/ihf_cb/rp-nonce-unless-code-flow"
+  ],
+  "client_preferences": {
+    "application_type": "web",
+    "application_name": "rphandler",
+    "contacts": [
+      "ops@example.com"
+    ],
+    "response_types": [
+      "<RESPONSE_TYPE>"
+    ],
+    "scope": [
+      "openid"
+    ],
+    "token_endpoint_auth_method": "client_secret_basic"
+  },
+  "services": {
+    "discovery": {
+        "class": "oidcservice.oidc.provider_info_discovery.ProviderInfoDiscovery"},
+    "registration": {
+        "class": "oidcservice.oidc.registration.Registration"},
+    "authorization": {
+        "class": "oidcservice.oidc.authorization.Authorization"},
+    "access_token": {
+        "class": "oidcservice.oidc.access_token.AccessToken"}
+  }
+}

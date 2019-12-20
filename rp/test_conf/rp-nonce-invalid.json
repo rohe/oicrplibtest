@@ -18,9 +18,13 @@
     "token_endpoint_auth_method": "client_secret_basic"
   },
   "services": {
-    "ProviderInfoDiscovery": {},
-    "Registration": {},
-    "Authorization": {},
-    "AccessToken": {}
+    "discovery": {
+        "class": "oidcservice.oidc.provider_info_discovery.ProviderInfoDiscovery"},
+    "registration": {
+        "class": "oidcservice.oidc.registration.Registration"},
+    "authorization": {
+        "class": "oidcservice.oidc.authorization.Authorization"},
+    "access_token": {
+        "class": "oidcservice.oidc.access_token.AccessToken"}
   }
 }
