@@ -37,9 +37,9 @@ if __name__ == "__main__":
 
     name = 'oidc_rp'
     app = application.oidc_provider_init_app(args.config, name, args)
-
-    app.run(host=app.config.get('DOMAIN'), port=app.config.get('PORT'),
-            debug=True,
-            ssl_context=('{}/certs/cert.pem'.format(dir_path),
-                         '{}/certs/key.pem'.format(dir_path))
+    web_conf = app.rp_config.web_conf
+    app.run(host=web_conf["domain"], port=web_conf["port"],
+            debug=web_conf.get("debug", False),
+            ssl_context=('{}/{}'.format(dir_path, web_conf["server_cert"]),
+                         '{}/{}'.format(dir_path, web_conf["server_key"]))
             )

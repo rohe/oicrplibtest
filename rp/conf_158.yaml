@@ -1,0 +1,85 @@
+logging:
+  version: 1
+  disable_existing_loggers: False
+  root:
+    handlers:
+      - console
+      - file
+    level: DEBUG
+  loggers:
+    idp:
+      level: DEBUG
+  handlers:
+    console:
+      class: logging.StreamHandler
+      stream: 'ext://sys.stdout'
+      formatter: default
+    file:
+      class: logging.FileHandler
+      filename: 'debug.log'
+      formatter: default
+  formatters:
+    default:
+      format: '%(asctime)s %(name)s %(levelname)s %(message)s'
+
+port: &port 8100
+domain: &domain 192.168.1.158
+base_url: "https://{domain}:{port}"
+
+http_params:
+  # This is just for testing an local usage. In all other cases it MUST be True
+  verify: false
+  # Client side
+  #client_cert: "certs/client.crt"
+  #client_key: "certs/client.key"
+
+keydefs: &keydef
+  - "type": "RSA"
+    "key": ''
+    "use": ["sig"]
+  - "type": "EC"
+    "crv": "P-256"
+    "use": ["sig"]
+
+rp_keys:
+  'private_path': 'private/jwks.json'
+  'key_defs': *keydef
+  'public_path': 'static/jwks.json'
+  # this will create the jwks files if they are absent
+  'read_only': False
+
+services: &id002
+  discovery: &disc
+    class: oidcservice.oidc.provider_info_discovery.ProviderInfoDiscovery
+    kwargs: {}
+  registration: &regist
+    class: oidcservice.oidc.registration.Registration
+    kwargs: {}
+  authorization: &authz
+    class: oidcservice.oidc.authorization.Authorization
+    kwargs: {}
+  accesstoken: &acctok
+    class: oidcservice.oidc.access_token.AccessToken
+    kwargs: {}
+  userinfo: &userinfo
+    class: oidcservice.oidc.userinfo.UserInfo
+    kwargs: {}
+  end_session: &sess
+    class: oidcservice.oidc.end_session.EndSession
+    kwargs: {}
+
+testtool_url: 'https://192.168.1.158:8080'
+tester_id: 'oidcrp'
+template_dir: 'templates'
+
+webserver:
+  port: *port
+  domain: *domain
+  # If BASE is https these has to be specified
+  server_cert: "certs/cert.pem"
+  server_key: "certs/key.pem"
+  # If you want the clients cert to be verified
+  # verify_user: optional
+  # The you also need
+  # ca_bundle: ''
+  debug: true

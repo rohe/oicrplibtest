@@ -1,7 +1,7 @@
 {
-  "issuer": "<OP>/oicrp/rp-backchannel-rpinitlogout-lt-alg-none",
+  "issuer": "<OP>/oicrp/rp-frontchannel-rpinitlogout-wrong-iss",
   "redirect_uris": [
-    "<RP>/ihf_cb/rp-backchannel-rpinitlogout-lt-alg-none"
+    "<RP>/ihf_cb/rp-frontchannel-rpinitlogout-wrong-iss"
   ],
   "client_preferences": {
     "application_type": "web",
@@ -16,11 +16,11 @@
       "openid"
     ],
     "token_endpoint_auth_method": "client_secret_basic",
-    "backchannel_logout_session_required": true
+    "frontchannel_logout_session_required": true
   },
-  "backchannel_logout_uri": "<RP>/bc_logout/rp-backchannel-rpinitlogout-lt-alg-none",
+  "frontchannel_logout_uri": "<RP>/fc_logout/rp-frontchannel-rpinitlogout-wrong-iss",
   "post_logout_redirect_uris": [
-    "<RP>/post_logout/rp-backchannel-rpinitlogout-lt-alg-none"],
+    "<RP>/post_logout/rp-frontchannel-rpinitlogout"],
   "jwks_uri": "<RP>/static/jwks.json",
   "services": {
     "discovery": {

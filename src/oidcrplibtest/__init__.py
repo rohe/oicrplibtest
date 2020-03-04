@@ -14,7 +14,9 @@ from oidcmsg.exception import NotForMe
 from oidcmsg.oidc import verified_claim_name
 from oidcmsg.oidc.session import BackChannelLogoutRequest
 from oidcrp import InMemoryStateDataBase
+from oidcrp import configure
 from oidcrp.oidc import RP
+from oidcrp.util import set_param
 from oidcservice.service_factory import service_factory
 from oidcservice.state_interface import StateInterface
 
@@ -181,13 +183,13 @@ def do_request(client, srv, scope="", response_body_type="", method="",
 
 
 class RPHandler(object):
-    def __init__(self, base_url='', hash_seed="", verify_ssl=False,
+    def __init__(self, base_url='', hash_seed="", httpc_params=None,
                  client_configs=None, state_db=None,
                  client_authn_factory=None, client_cls=None, keyjar=None,
                  jwks_path='', jwks_uri='', template_handler=None, **kwargs):
         self.base_url = base_url
         self.hash_seed = as_bytes(hash_seed)
-        self.verify_ssl = verify_ssl
+        self.httpc_params = httpc_params or {}
         self.keyjar = keyjar
 
         if state_db is None:
@@ -330,12 +332,12 @@ class RPHandler(object):
             _services = _cnf['services']
             keyjar = KeyJar()
             keyjar.import_jwks(self.keyjar.export_jwks(True, ''), '')
-            keyjar.verify_ssl = self.verify_ssl
+            keyjar.httpc_params = self.httpc_params
             try:
                 client = self.client_cls(
                     keyjar=keyjar, state_db=self.state_db,
                     client_authn_factory=self.client_authn_factory,
-                    verify_ssl=self.verify_ssl, services=_services,
+                    httpc_params=self.httpc_params, services=_services,
                     config=_cnf)
             except Exception as err:
                 logger.error('Failed initiating client: {}'.format(err))
@@ -473,3 +475,9 @@ def importer(name):
     c1, c2 = modsplit(name)
     module = importlib.import_module(c1)
     return getattr(module, c2)
+
+
+class Configuration(configure.Configuration):
+    def load_extension(self, conf):
+        for param in ["testtool_url", "tester_id", "template_dir"]:
+            set_param(self, conf, param)

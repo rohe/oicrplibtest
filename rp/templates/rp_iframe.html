@@ -35,7 +35,7 @@
 
         if (stat === "{{ looked_for_state }}") {
             clearInterval(timer_id);
-            alert("Your session has the looked for state.");
+            alert("Your session has the expected state.");
             window.parent.window.location = "{{ session_change_url }}";
         }
         else {
