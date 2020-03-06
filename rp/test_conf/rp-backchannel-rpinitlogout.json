@@ -1,0 +1,40 @@
+{
+  "issuer": "<OP>/oicrp/rp-backchannel-rpinitlogout",
+  "redirect_uris": [
+    "<RP>/ihf_cb/rp-backchannel-rpinitlogout"
+  ],
+  "client_preferences": {
+    "application_type": "web",
+    "application_name": "rphandler",
+    "contacts": [
+      "ops@example.com"
+    ],
+    "response_types": [
+      "<RESPONSE_TYPE>"
+    ],
+    "scope": [
+      "openid"
+    ],
+    "token_endpoint_auth_method": "client_secret_basic",
+    "backchannel_logout_session_required": true
+  },
+  "backchannel_logout_uri": "<RP>/bc_logout/rp-backchannel-rpinitlogout",
+  "jwks_uri": "<RP>/static/jwks.json",
+  "services": {
+    "discovery": {
+        "class": "oidcservice.oidc.provider_info_discovery.ProviderInfoDiscovery",
+        "kwargs": {}},
+    "registration": {
+        "class": "oidcservice.oidc.registration.Registration",
+        "kwargs": {}},
+    "authorization": {
+        "class": "oidcservice.oidc.authorization.Authorization",
+        "kwargs": {}},
+    "access_token": {
+        "class": "oidcservice.oidc.access_token.AccessToken",
+        "kwargs": {}},
+    "end_session": {
+        "class": "oidcservice.oidc.end_session.EndSession",
+        "kwargs": {}}
+  }
+}

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 import argparse
-import importlib
 import os
 import sys
 
+from oidcrplibtest import Configuration
 from oidcrplibtest import RT
 from oidcrplibtest import get_clients
 
@@ -15,8 +15,7 @@ args = parser.parse_args()
 
 folder = os.path.abspath(os.curdir)
 sys.path.insert(0, ".")
-config = importlib.import_module(args.config)
-
+config = Configuration.create_from_config_file(args.config)
 
 _pre_html = """
 <!DOCTYPE html>
@@ -30,7 +29,7 @@ _pre_html = """
 
 pattern = """<li>
     <a href="{}/rp/{{}}">{{}}</a>
-</li>""".format(config.BASEURL)
+</li>""".format(config.base_url)
 
 _post_html = """  </ol>
 </body>
@@ -44,8 +43,8 @@ if args.mti:
 else:
     profile_file = 'full.json'
 
-clients = get_clients(args.profile, RT[args.profile], config.TESTTOOL_URL,
-                      config.BASEURL, profile_file)
+clients = get_clients(args.profile, RT[args.profile], config.testtool_url,
+                      config.base_url, profile_file)
 
 _ids = list(clients.keys())
 _ids.sort()
