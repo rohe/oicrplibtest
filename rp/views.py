@@ -172,13 +172,13 @@ def session_logout(op_hash):
     logger.debug('post_logout')
     _rp = get_rp(op_hash)
     _rp.service_context.service_index += 1
-    _state = request.args.get("state")
-    if _state:
+    _logout_state = request.args.get("state")
+    if _logout_state:
         # verify that it's a correct state value
         try:
-            _rp.session_interface.get_state(_state)
+            _state = _rp.session_interface.get_state_by_x(_logout_state, 'logout state')
         except KeyError:
-            return make_response("Incorrect state value", 400)
+            return make_response("Incorrect state value returned", 400)
         res = current_app.rph.run(_rp, _state)
     else:
         if "state" in session:
