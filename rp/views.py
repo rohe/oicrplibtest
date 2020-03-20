@@ -117,6 +117,7 @@ def ihf_cb(self, op_hash='', **kwargs):
 
 
 def _session_iframe(looked_for_state, op_hash):  # session management
+    logger.debug("Render session iframe")
     _rp = get_rp(op_hash)
 
     session_change_url = "{}/session_change/{}".format(
@@ -155,6 +156,7 @@ def session_change(op_hash):
     logger.debug('session_change: {}'.format(op_hash))
     _rp = get_rp(op_hash)
     res = current_app.rph.run(_rp, session["state"])
+    logger.debug("res: %s", res)
     if isinstance(res, dict):
         if 'http_response' in res:
             _http_response = res["http_response"]
@@ -178,10 +180,12 @@ def session_logout(op_hash):
         try:
             _state = _rp.session_interface.get_state_by_x(_logout_state, 'logout state')
         except KeyError:
+            logger.debug("Incorrect state value returned")
             return make_response("Incorrect state value returned", 400)
         res = current_app.rph.run(_rp, _state)
     else:
         if "state" in session:
+            logger.debug("Provided state value was not returned")
             return make_response("Provided state value was not returned")
         res = current_app.rph.run(_rp)
 
@@ -193,6 +197,7 @@ def session_logout(op_hash):
         else:
             return make_response(res['error'], 400)
     else:
+        logger.debug(res)
         return make_response(res, 200)
 
 
@@ -208,6 +213,7 @@ def logout(op_hash):
 
 @oidc_rp_views.route('/bc_logout/<op_hash>', methods=['POST'])
 def backchannel_logout(op_hash):
+    logger.debug("Backchannel logout")
     _rp = get_rp(op_hash)
 
     logout_token = request.form['logout_token']
@@ -219,11 +225,13 @@ def backchannel_logout(op_hash):
     else:
         _rp.session_interface.remove_state(_state)
         session['logout'] = op_hash
+        logger.debug("OK")
         return "OK"
 
 
 @oidc_rp_views.route('/fc_logout/<op_hash>', methods=['GET', 'POST'])
 def frontchannel_logout(op_hash):
+    logger.debug("Frontchannel logout")
     _rp = get_rp(op_hash)
     sid = request.args['sid']
     _iss = request.args['iss']
@@ -232,4 +240,5 @@ def frontchannel_logout(op_hash):
     session['logout'] = op_hash
     _state = _rp.session_interface.get_state_by_sid(sid)
     _rp.session_interface.remove_state(_state)
+    logger.debug("OK")
     return "OK"
