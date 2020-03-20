@@ -180,12 +180,12 @@ def session_logout(op_hash):
         try:
             _state = _rp.session_interface.get_state_by_x(_logout_state, 'logout state')
         except KeyError:
-            logger.debug("Incorrect state value returned")
+            logger.error("Incorrect state value returned")
             return make_response("Incorrect state value returned", 400)
         res = current_app.rph.run(_rp, _state)
     else:
         if "state" in session:
-            logger.debug("Provided state value was not returned")
+            logger.error("Provided state value was not returned")
             return make_response("Provided state value was not returned")
         res = current_app.rph.run(_rp)
 
@@ -236,6 +236,7 @@ def frontchannel_logout(op_hash):
     sid = request.args['sid']
     _iss = request.args['iss']
     if _iss != _rp.service_context.issuer:
+        logger.error("Issuer mismatch")
         return 'Bad request', 400
     session['logout'] = op_hash
     _state = _rp.session_interface.get_state_by_sid(sid)
